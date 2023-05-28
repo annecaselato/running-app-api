@@ -4,6 +4,6 @@ import { Query, Resolver } from '@nestjs/graphql';
 export class HealthResolver {
   @Query(() => String)
   checkHealth(): string {
-    return 'OK!';
+    return 'OK';
   }
 }
