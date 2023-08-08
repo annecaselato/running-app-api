@@ -1,0 +1,46 @@
+version: '3.7'
+
+services:
+  running-api:
+    container_name: running-api
+    image: running-api:dev
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - 8080:8080
+    command: npm run start:dev
+    environment:
+      NODE_ENV: development
+      SERVER_PORT: 8080
+      DB_HOST: running-postgres
+      DB_DATABASE: postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: 2oZS2tX4qv7uuzDf
+      DB_PORT: 5432
+    networks:
+      - running-connect
+    depends_on:
+      - running-postgres
+
+  running-postgres:
+    container_name: running-postgres
+    image: postgres
+    restart: unless-stopped
+    volumes:
+      - ~/docker/volumes/Running_Postgres:/var/lib/postgresql
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: 2oZS2tX4qv7uuzDf
+    networks:
+      - running-connect
+    logging:
+      driver: none
+
+networks:
+  running-connect:
+    driver: bridge
