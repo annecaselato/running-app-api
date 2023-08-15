@@ -4,12 +4,14 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { HealthModule } from './modules/health/health.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/users/user.module';
+import { ExceptionHandler } from './app.exception';
 
 @Module({
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: 'schema.gql'
+      autoSchemaFile: 'schema.gql',
+      formatError: ExceptionHandler.formatApolloError
     }),
     TypeOrmModule.forRoot({
       keepConnectionAlive: true,
