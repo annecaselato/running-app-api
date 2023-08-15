@@ -5,7 +5,7 @@ import {
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  registerDecorator,
+  registerDecorator
 } from 'class-validator';
 
 @ValidatorConstraint({ name: 'email', async: true })
@@ -25,7 +25,7 @@ export function IsUniqueEmail(validationOptions?: ValidationOptions) {
       propertyName: propertyName,
       options: { message: 'Email is already in use', ...validationOptions },
       constraints: [],
-      validator: IsUniqueEmailConstraint,
+      validator: IsUniqueEmailConstraint
     });
   };
 }

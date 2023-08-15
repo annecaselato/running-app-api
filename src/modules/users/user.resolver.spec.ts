@@ -8,7 +8,7 @@ describe('UserResolver', () => {
   const newUser = {
     name: 'Test User',
     email: 'user@test.com',
-    password: 'Pass123',
+    password: 'Pass123'
   };
 
   beforeEach(async () => {
@@ -18,10 +18,10 @@ describe('UserResolver', () => {
         {
           provide: UserService,
           useFactory: () => ({
-            create: jest.fn((newUser) => ({ id: '1', ...newUser })),
-          }),
-        },
-      ],
+            create: jest.fn((newUser) => ({ id: '1', ...newUser }))
+          })
+        }
+      ]
     }).compile();
 
     resolver = module.get<UserResolver>(UserResolver);

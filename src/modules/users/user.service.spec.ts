@@ -19,10 +19,10 @@ describe('UserService', () => {
           useValue: {
             create: jest.fn(),
             save: jest.fn(),
-            findOne: jest.fn(),
-          },
-        },
-      ],
+            findOne: jest.fn()
+          }
+        }
+      ]
     }).compile();
 
     userService = module.get<UserService>(UserService);
@@ -42,7 +42,7 @@ describe('UserService', () => {
       const newUser = {
         name: 'Test User',
         email: 'testuser@email.com',
-        password: 'pass123',
+        password: 'pass123'
       };
       await userService.create(newUser);
       expect(userRepository.create).toHaveBeenCalledWith(newUser);
@@ -53,7 +53,7 @@ describe('UserService', () => {
     it('should call userRespository.findOne with correct parameters', async () => {
       await userService.findOneByEmail('test@email.com');
       expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: { email: 'test@email.com' },
+        where: { email: 'test@email.com' }
       });
     });
   });

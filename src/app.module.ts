@@ -9,7 +9,7 @@ import { UserModule } from './modules/users/user.module';
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: 'schema.gql',
+      autoSchemaFile: 'schema.gql'
     }),
     TypeOrmModule.forRoot({
       keepConnectionAlive: true,
@@ -20,10 +20,10 @@ import { UserModule } from './modules/users/user.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: true
     }),
     HealthModule,
-    UserModule,
-  ],
+    UserModule
+  ]
 })
 export class AppModule {}

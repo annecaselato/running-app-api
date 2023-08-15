@@ -3,7 +3,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsString,
-  IsStrongPassword,
+  IsStrongPassword
 } from 'class-validator';
 
 import { IsUniqueEmail } from '../validators/EmailValidator';

@@ -8,7 +8,7 @@ import { CreateUserInput } from './dto/create-user.input';
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>
   ) {}
 
   async create(createUserInput: CreateUserInput): Promise<User> {
