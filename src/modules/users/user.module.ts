@@ -7,6 +7,7 @@ import { IsUniqueEmailConstraint } from './validators/EmailValidator';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User])],
-  providers: [UserResolver, UserService, IsUniqueEmailConstraint]
+  providers: [UserResolver, UserService, IsUniqueEmailConstraint],
+  exports: [UserService]
 })
 export class UserModule {}

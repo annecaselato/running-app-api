@@ -15,12 +15,22 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type SignInResponseDto {
+  access_token: String!
+}
+
 type Query {
   checkHealth: String!
 }
 
 type Mutation {
+  signIn(signInInput: SignInInputDto!): SignInResponseDto!
   createUser(createUserInput: CreateUserInput!): User!
+}
+
+input SignInInputDto {
+  email: String!
+  password: String!
 }
 
 input CreateUserInput {
