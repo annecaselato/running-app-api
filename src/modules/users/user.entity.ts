@@ -14,7 +14,7 @@ import * as bcrypt from 'bcrypt';
 export class User {
   @PrimaryGeneratedColumn('uuid')
   @Field()
-  userId: string;
+  id: string;
 
   @Column()
   @Field()

@@ -17,9 +17,9 @@ describe('UserService', () => {
         {
           provide: USER_REPOSITORY_TOKEN,
           useValue: {
-            create: jest.fn(),
-            save: jest.fn(),
-            findOne: jest.fn()
+            create: jest.fn().mockResolvedValue({}),
+            save: jest.fn().mockResolvedValue({}),
+            findOne: jest.fn().mockResolvedValue({})
           }
         }
       ]
@@ -38,20 +38,28 @@ describe('UserService', () => {
   });
 
   describe('create', () => {
-    it('should call userRespository.insert with correct parameters', async () => {
+    it('should call userRepository.create with correct parameters', async () => {
+      // Arrange
       const newUser = {
         name: 'Test User',
         email: 'testuser@email.com',
         password: 'pass123'
       };
+
+      // Act
       await userService.create(newUser);
+
+      // Assert
       expect(userRepository.create).toHaveBeenCalledWith(newUser);
     });
   });
 
   describe('findOneByEmail', () => {
-    it('should call userRespository.findOne with correct parameters', async () => {
+    it('should call userRepository.findOne with correct parameters', async () => {
+      // Act
       await userService.findOneByEmail('test@email.com');
+
+      // Assert
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { email: 'test@email.com' }
       });

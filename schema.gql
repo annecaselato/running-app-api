@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 
 type User {
-  userId: String!
+  id: String!
   name: String!
   email: String!
   createdAt: DateTime!

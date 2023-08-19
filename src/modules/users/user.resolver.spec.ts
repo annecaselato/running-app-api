@@ -4,6 +4,7 @@ import { UserService } from './user.service';
 
 describe('UserResolver', () => {
   let resolver: UserResolver;
+  let userService: UserService;
 
   const newUser = {
     name: 'Test User',
@@ -25,15 +26,28 @@ describe('UserResolver', () => {
     }).compile();
 
     resolver = module.get<UserResolver>(UserResolver);
+    userService = module.get<UserService>(UserService);
   });
 
-  it('should be defined', () => {
+  it('user resolver should be defined', () => {
+    expect(resolver).toBeDefined();
+  });
+
+  it('user service should be defined', () => {
     expect(resolver).toBeDefined();
   });
 
   describe('createUser', () => {
-    it('Should return new user', () => {
-      expect(resolver.createUser(newUser)).toEqual({ id: '1', ...newUser });
+    it('should create a new user', async () => {
+      // Arrange
+      const createSpy = jest.spyOn(userService, 'create');
+
+      // Act
+      const result = await resolver.createUser(newUser);
+
+      // Assert
+      expect(result).toEqual({ id: '1', ...newUser });
+      expect(createSpy).toHaveBeenCalledWith(newUser);
     });
   });
 });
