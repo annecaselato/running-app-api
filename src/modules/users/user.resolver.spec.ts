@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserResolver } from './user.resolver';
 import { UserService } from './user.service';
+import { User } from './user.entity';
 
 describe('UserResolver', () => {
   let resolver: UserResolver;
@@ -12,6 +13,8 @@ describe('UserResolver', () => {
     password: 'Pass123'
   };
 
+  const authUser = { id: 'user-id', ...newUser } as User;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -19,7 +22,8 @@ describe('UserResolver', () => {
         {
           provide: UserService,
           useFactory: () => ({
-            create: jest.fn((newUser) => ({ id: '1', ...newUser }))
+            create: jest.fn((newUser) => ({ id: '1', ...newUser })),
+            findOneById: jest.fn(() => authUser)
           })
         }
       ]
@@ -48,6 +52,16 @@ describe('UserResolver', () => {
       // Assert
       expect(result).toEqual({ id: '1', ...newUser });
       expect(createSpy).toHaveBeenCalledWith(newUser);
+    });
+  });
+
+  describe('me', () => {
+    it('should return the authenticated user', () => {
+      // Act
+      const result = resolver.me(authUser);
+
+      // Assert
+      expect(result).toEqual(authUser);
     });
   });
 });

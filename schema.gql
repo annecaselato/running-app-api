@@ -15,31 +15,28 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type SignInResponseDto {
+type SignInResponse {
   access_token: String!
+  user: User!
 }
 
 type Query {
+  me: User!
   checkHealth: String!
 }
 
 type Mutation {
-  signIn(signInInput: SignInInputDto!): SignInResponseDto!
+  signIn(signInInput: SignInInput!): SignInResponse!
   createUser(createUserInput: CreateUserInput!): User!
 }
 
-input SignInInputDto {
+input SignInInput {
   email: String!
   password: String!
 }
 
 input CreateUserInput {
-  """user email"""
   email: String!
-
-  """user first name"""
   name: String!
-
-  """user password"""
   password: String!
 }

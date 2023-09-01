@@ -8,13 +8,18 @@ import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { IS_PUBLIC_KEY } from '../../shared/decorators/public-route.decorator';
+import { IS_PUBLIC_KEY } from '../../shared/decorators';
+import { UserService } from '../users/user.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService, private reflector: Reflector) {}
+  constructor(
+    private jwtService: JwtService,
+    private reflector: Reflector,
+    private userService: UserService
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass()
@@ -28,8 +33,8 @@ export class AuthGuard implements CanActivate {
     if (!token) throw new UnauthorizedException('Invalid access token');
 
     try {
-      const { sub, email, name } = this.jwtService.verify(token);
-      request['user'] = { id: sub, email, name };
+      const { sub } = this.jwtService.verify(token);
+      request['user'] = await this.userService.findOneById(sub);
     } catch {
       throw new UnauthorizedException('Invalid access token');
     }

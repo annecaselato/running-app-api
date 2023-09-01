@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UserService } from '../users/user.service';
 import { UnauthorizedException } from '@nestjs/common';
+import { User } from '../users/user.entity';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -14,8 +15,8 @@ describe('AuthService', () => {
     id: 'user-id',
     email: 'user@email.com',
     name: 'User',
-    pass: 'pass-hash'
-  };
+    password: 'pass-hash'
+  } as User;
 
   const mockCredentials = {
     email: 'user@email.com',
@@ -29,7 +30,8 @@ describe('AuthService', () => {
         {
           provide: UserService,
           useValue: {
-            findOneByEmail: jest.fn(() => Promise.resolve(mockUser))
+            findOneByEmail: jest.fn(() => Promise.resolve(mockUser)),
+            findOneById: jest.fn(() => Promise.resolve(mockUser))
           }
         },
         {
@@ -64,12 +66,8 @@ describe('AuthService', () => {
       const result = await authService.signIn(mockCredentials);
 
       // Assert
-      expect(result).toEqual({ access_token: 'access-token' });
-      expect(jwtSignAsyncSpy).toHaveBeenCalledWith({
-        sub: mockUser.id,
-        name: mockUser.name,
-        email: mockUser.email
-      });
+      expect(result).toEqual({ access_token: 'access-token', user: mockUser });
+      expect(jwtSignAsyncSpy).toHaveBeenCalledWith({ sub: mockUser.id });
     });
 
     it('should throw UnauthorizedException if password is incorrect', async () => {

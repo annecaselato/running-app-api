@@ -1,8 +1,8 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { User } from './user.entity';
 import { UserService } from './user.service';
-import { CreateUserInput } from './dto/create-user.input';
-import { PublicRoute } from '../../shared/decorators/public-route.decorator';
+import { CreateUserInput } from './dto';
+import { AuthUser, PublicRoute } from '../../shared/decorators';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -12,5 +12,10 @@ export class UserResolver {
   @Mutation(() => User)
   createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
     return this.userService.create(createUserInput);
+  }
+
+  @Query(() => User)
+  me(@AuthUser() authUser: User): User {
+    return authUser;
   }
 }

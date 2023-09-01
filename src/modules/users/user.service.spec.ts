@@ -65,4 +65,19 @@ describe('UserService', () => {
       });
     });
   });
+
+  describe('findOneById', () => {
+    it('should call userRepository.findOne with correct parameters', async () => {
+      // Arrange
+      const userId = 'user-id';
+
+      // Act
+      await userService.findOneById(userId);
+
+      // Assert
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId }
+      });
+    });
+  });
 });

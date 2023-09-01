@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { createMock } from '@golevelup/ts-jest';
 import { AuthGuard } from './auth.guard';
+import { UserService } from '../users/user.service';
 
 describe('TokenAuthGuard', () => {
   let authGuard: AuthGuard;
@@ -22,7 +23,16 @@ describe('TokenAuthGuard', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [AuthGuard, JwtService]
+      providers: [
+        AuthGuard,
+        JwtService,
+        {
+          provide: UserService,
+          useValue: {
+            findOneById: jest.fn(() => Promise.resolve({ id: 'user-id' }))
+          }
+        }
+      ]
     }).compile();
 
     // Arrange
@@ -32,17 +42,16 @@ describe('TokenAuthGuard', () => {
   });
 
   it('should be defined', () => {
-    // Assert
     expect(authGuard).toBeDefined();
   });
 
   describe('canActivate', () => {
-    it('should return true when the route is public', () => {
+    it('should return true when the route is public', async () => {
       // Arrange
       reflector.getAllAndOverride = jest.fn().mockReturnValue(true);
 
       // Act & Assert
-      expect(authGuard.canActivate(context)).toBe(true);
+      expect(await authGuard.canActivate(context)).toBe(true);
     });
 
     it('should throw an UnauthorizedException if no token is provided', () => {
@@ -51,7 +60,7 @@ describe('TokenAuthGuard', () => {
       GqlExecutionContext.create = createGqlContext();
 
       // Act & Assert
-      expect(() => authGuard.canActivate(context)).toThrow(
+      expect(() => authGuard.canActivate(context)).rejects.toBeInstanceOf(
         UnauthorizedException
       );
     });
@@ -66,24 +75,20 @@ describe('TokenAuthGuard', () => {
       });
 
       // Act & Assert
-      expect(() => authGuard.canActivate(context)).toThrow(
+      expect(() => authGuard.canActivate(context)).rejects.toBeInstanceOf(
         UnauthorizedException
       );
     });
 
-    it('should return true if authorized', () => {
+    it('should return true if authorized', async () => {
       // Arrange
       const token = 'Bearer valid-token';
       reflector.getAllAndOverride = jest.fn().mockReturnValue(false);
       GqlExecutionContext.create = createGqlContext({ authorization: token });
-      jwtService.verify = jest.fn().mockReturnValue({
-        sub: 'user-id',
-        name: 'User',
-        email: 'user-email'
-      });
+      jwtService.verify = jest.fn().mockReturnValue({ sub: 'user-id' });
 
       // Act & Assert
-      expect(authGuard.canActivate(context)).toBe(true);
+      expect(await authGuard.canActivate(context)).toBe(true);
     });
   });
 });

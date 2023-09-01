@@ -15,19 +15,19 @@ export class CreateUserInput {
   @IsEmail()
   @IsUniqueEmail()
   @Transform(({ value }) => value.trim())
-  @Field({ description: 'user email' })
+  @Field()
   email: string;
 
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }) => value.trim())
-  @Field({ description: 'user first name' })
+  @Field()
   name: string;
 
   @IsString()
   @IsNotEmpty()
   @IsStrongPassword()
   @Transform(({ value }) => value.trim())
-  @Field({ description: 'user password' })
+  @Field()
   password: string;
 }
