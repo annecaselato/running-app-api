@@ -28,11 +28,11 @@ export class UserService {
     return this.userRepository.delete(id);
   }
 
-  async findOneById(id: string): Promise<User> {
+  async findOneById(id: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { id } });
   }
 
-  async findOneByEmail(email: string): Promise<User> {
+  async findOneByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { email } });
   }
 }
