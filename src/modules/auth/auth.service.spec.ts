@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UserService } from '../users/user.service';
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { User } from '../users/user.entity';
 
 describe('AuthService', () => {
@@ -31,7 +31,8 @@ describe('AuthService', () => {
           provide: UserService,
           useValue: {
             findOneByEmail: jest.fn(() => Promise.resolve(mockUser)),
-            findOneById: jest.fn(() => Promise.resolve(mockUser))
+            findOneById: jest.fn(() => Promise.resolve(mockUser)),
+            updatePassword: jest.fn(() => Promise.resolve(mockUser))
           }
         },
         {
@@ -88,6 +89,67 @@ describe('AuthService', () => {
       await expect(authService.signIn(mockCredentials)).rejects.toBeInstanceOf(
         UnauthorizedException
       );
+    });
+  });
+
+  describe('updatePassword', () => {
+    const mockUserId = 'user-id';
+    const mockUpdatePasswordInput = {
+      oldPassword: 'old-pass',
+      newPassword: 'new-pass'
+    };
+    const mockUpdatedUser = {
+      ...mockUser,
+      password: 'new-pass-hash'
+    } as User;
+
+    it('should update user password if old password is correct', async () => {
+      // Arrange
+      jest
+        .spyOn(userService, 'updatePassword')
+        .mockResolvedValue(mockUpdatedUser);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => true);
+      jest
+        .spyOn(bcrypt, 'hash')
+        .mockImplementation(async () => 'new-pass-hash');
+
+      // Act
+      const result = await authService.updatePassword(
+        mockUserId,
+        mockUpdatePasswordInput
+      );
+
+      // Assert
+      expect(result).toEqual(mockUpdatedUser);
+      expect(userService.updatePassword).toHaveBeenCalledWith(
+        mockUserId,
+        'new-pass-hash'
+      );
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        mockUpdatePasswordInput.oldPassword,
+        mockUser.password
+      );
+    });
+
+    it('should throw BadRequestException if old password is incorrect', async () => {
+      // Arrange
+      jest.spyOn(userService, 'findOneById').mockResolvedValue(mockUser);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => false);
+
+      // Act & Assert
+      await expect(
+        authService.updatePassword(mockUserId, mockUpdatePasswordInput)
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('should throw UnauthorizedException if user is not found', async () => {
+      // Arrange
+      jest.spyOn(userService, 'findOneById').mockResolvedValue(undefined);
+
+      // Act & Assert
+      await expect(
+        authService.updatePassword(mockUserId, mockUpdatePasswordInput)
+      ).rejects.toBeInstanceOf(UnauthorizedException);
     });
   });
 });

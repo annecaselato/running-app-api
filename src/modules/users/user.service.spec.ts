@@ -19,6 +19,7 @@ describe('UserService', () => {
           useValue: {
             create: jest.fn().mockResolvedValue({}),
             save: jest.fn().mockResolvedValue({}),
+            delete: jest.fn().mockResolvedValue({}),
             findOne: jest.fn().mockResolvedValue({})
           }
         }
@@ -63,6 +64,53 @@ describe('UserService', () => {
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { email: 'test@email.com' }
       });
+    });
+  });
+
+  describe('update', () => {
+    it('should call userRepository.save with correct parameters', async () => {
+      // Arrange
+      const userId = 'user-id';
+      const updateUserInput = { name: 'Updated User' };
+
+      // Act
+      await userService.update(userId, updateUserInput);
+
+      // Assert
+      expect(userRepository.save).toHaveBeenCalledWith({
+        id: userId,
+        ...updateUserInput
+      });
+    });
+  });
+
+  describe('updatePassword', () => {
+    it('should call userRepository.save with correct parameters', async () => {
+      // Arrange
+      const userId = 'user-id';
+      const newPassword = 'new-pass';
+
+      // Act
+      await userService.updatePassword(userId, newPassword);
+
+      // Assert
+      expect(userRepository.save).toHaveBeenCalledWith({
+        id: userId,
+        password: newPassword
+      });
+    });
+  });
+
+  describe('delete', () => {
+    it('should call userRepository.delete with correct parameters', async () => {
+      // Arrange
+      const userId = 'user-id';
+
+      // Act
+      await userService.delete(userId);
+
+      // Assert
+      expect(userRepository.delete).toHaveBeenCalledWith(userId);
     });
   });
 

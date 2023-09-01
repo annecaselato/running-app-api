@@ -48,4 +48,23 @@ describe('AuthResolver', () => {
       expect(result).toEqual({ access_token: 'access-token', user: mockUser });
     });
   });
+
+  describe('updatePassword', () => {
+    it('should return the updated user id if password update is successful', async () => {
+      // Arrange
+      const updatePasswordInput = {
+        oldPassword: 'old-pass',
+        newPassword: 'new-pass'
+      };
+
+      // Act
+      const result: string = await authResolver.updatePassword(
+        updatePasswordInput,
+        mockUser
+      );
+
+      // Assert
+      expect(result).toEqual(mockUser.id);
+    });
+  });
 });

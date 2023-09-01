@@ -23,6 +23,8 @@ describe('UserResolver', () => {
           provide: UserService,
           useFactory: () => ({
             create: jest.fn((newUser) => ({ id: '1', ...newUser })),
+            update: jest.fn(() => authUser),
+            delete: jest.fn(() => ({})),
             findOneById: jest.fn(() => authUser)
           })
         }
@@ -52,6 +54,40 @@ describe('UserResolver', () => {
       // Assert
       expect(result).toEqual({ id: '1', ...newUser });
       expect(createSpy).toHaveBeenCalledWith(newUser);
+    });
+  });
+
+  describe('updateUser', () => {
+    it('should update the authenticated user', async () => {
+      // Arrange
+      const updateUserInput = { name: 'Updated User' };
+
+      const updateSpy = jest
+        .spyOn(userService, 'update')
+        .mockResolvedValue({ ...authUser, ...updateUserInput } as User);
+
+      // Act
+      const result = await resolver.updateUser(updateUserInput, authUser);
+
+      // Assert
+      expect(result).toEqual({ ...authUser, ...updateUserInput });
+      expect(updateSpy).toHaveBeenCalledWith(authUser.id, updateUserInput);
+    });
+  });
+
+  describe('deleteUser', () => {
+    it('should delete the authenticated user', async () => {
+      // Arrange
+      const deleteSpy = jest
+        .spyOn(userService, 'delete')
+        .mockResolvedValue({} as any);
+
+      // Act
+      const result = await resolver.deleteUser(authUser);
+
+      // Assert
+      expect(result).toEqual(authUser.id);
+      expect(deleteSpy).toHaveBeenCalledWith(authUser.id);
     });
   });
 
