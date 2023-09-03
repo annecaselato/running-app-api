@@ -32,7 +32,7 @@ jobs:
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USERNAME}@${HOSTNAME} '
 
-          cd /running-app-api &&
+          cd running-app-api/ &&
           git checkout stage &&
           git fetch --all &&
           git reset --hard origin/stage &&
