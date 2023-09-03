@@ -17,9 +17,10 @@ describe('UserService', () => {
         {
           provide: USER_REPOSITORY_TOKEN,
           useValue: {
-            create: jest.fn(),
-            save: jest.fn(),
-            findOne: jest.fn()
+            create: jest.fn().mockResolvedValue({}),
+            save: jest.fn().mockResolvedValue({}),
+            delete: jest.fn().mockResolvedValue({}),
+            findOne: jest.fn().mockResolvedValue({})
           }
         }
       ]
@@ -38,22 +39,92 @@ describe('UserService', () => {
   });
 
   describe('create', () => {
-    it('should call userRespository.insert with correct parameters', async () => {
+    it('should call userRepository.create with correct parameters', async () => {
+      // Arrange
       const newUser = {
         name: 'Test User',
         email: 'testuser@email.com',
         password: 'pass123'
       };
-      await userService.create(newUser);
+
+      // Act
+      await userService.create(newUser.name, newUser.email, newUser.password);
+
+      // Assert
       expect(userRepository.create).toHaveBeenCalledWith(newUser);
     });
   });
 
   describe('findOneByEmail', () => {
-    it('should call userRespository.findOne with correct parameters', async () => {
+    it('should call userRepository.findOne with correct parameters', async () => {
+      // Act
       await userService.findOneByEmail('test@email.com');
+
+      // Assert
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { email: 'test@email.com' }
+      });
+    });
+  });
+
+  describe('update', () => {
+    it('should call userRepository.save with correct parameters', async () => {
+      // Arrange
+      const userId = 'user-id';
+      const updateUserInput = { name: 'Updated User' };
+
+      // Act
+      await userService.update(userId, updateUserInput);
+
+      // Assert
+      expect(userRepository.save).toHaveBeenCalledWith({
+        id: userId,
+        ...updateUserInput
+      });
+    });
+  });
+
+  describe('updatePassword', () => {
+    it('should call userRepository.save with correct parameters', async () => {
+      // Arrange
+      const userId = 'user-id';
+      const newPassword = 'new-pass';
+
+      // Act
+      await userService.updatePassword(userId, newPassword);
+
+      // Assert
+      expect(userRepository.save).toHaveBeenCalledWith({
+        id: userId,
+        password: newPassword
+      });
+    });
+  });
+
+  describe('delete', () => {
+    it('should call userRepository.delete with correct parameters', async () => {
+      // Arrange
+      const userId = 'user-id';
+
+      // Act
+      await userService.delete(userId);
+
+      // Assert
+      expect(userRepository.delete).toHaveBeenCalledWith(userId);
+    });
+  });
+
+  describe('findOneById', () => {
+    it('should call userRepository.findOne with correct parameters', async () => {
+      // Arrange
+      const userId = 'user-id';
+
+      // Act
+      await userService.findOneById(userId);
+
+      // Assert
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId }
       });
     });
   });

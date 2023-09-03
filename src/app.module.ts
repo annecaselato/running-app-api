@@ -5,6 +5,7 @@ import { HealthModule } from './modules/health/health.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/users/user.module';
 import { ExceptionHandler } from './app.exception';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ExceptionHandler } from './app.exception';
       autoLoadEntities: true,
       synchronize: true
     }),
+    AuthModule,
     HealthModule,
     UserModule
   ]
