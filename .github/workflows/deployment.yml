@@ -1,0 +1,34 @@
+name: Deployment
+
+on:
+  push:
+    branches: [ stage ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build docker_compose
+        run: docker-compose -f docker-compose.stage.yml up -d --build
+      - name: Build application
+        run: docker-compose exec -T service yarn build
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy application
+        env:
+          PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
+          HOSTNAME : ${{ secrets.HOSTNAME }}
+          USERNAME : ${{ secrets.USERNAME }}
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key ${USERNAME}@${HOSTNAME} '
+
+          cd /running-app-api &&
+          git checkout stage &&
+          git fetch --all &&
+          git reset --hard origin/stage &&
+          git pull origin stage &&
+          docker-compose -f docker-compose.stage.yml up -d --build'
