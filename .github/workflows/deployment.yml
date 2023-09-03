@@ -8,10 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Build docker_compose
-        run: docker-compose -f docker-compose.stage.yml up -d --build
-      - name: Build application
-        run: docker-compose exec -T service yarn build
+      - name: Test and Build
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+      - run: npm install
+      - run: npm run lint
+      - run: npm test
+      - run: npm run test:e2e
+      - run: npm run build
   deploy:
     needs: build
     runs-on: ubuntu-latest
