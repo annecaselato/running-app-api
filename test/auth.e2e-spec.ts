@@ -9,6 +9,7 @@ import { useContainer } from 'class-validator';
 import { Repository } from 'typeorm';
 import * as request from 'supertest';
 import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
 import { User } from '../src/modules/users/user.entity';
 import { UpdatePasswordInput } from '../src/modules/auth/dto';
 import { UserModule } from '../src/modules/users/user.module';
@@ -171,6 +172,91 @@ describe('AuthResolver E2E', () => {
     );
   });
 
+  describe('signInOIDC', () => {
+    const signInOIDCInput = {
+      token: 'ID token '
+    };
+
+    const signInOIDCQuery = `
+      mutation ($signInOIDCInput: SignInOIDCInput!) {
+        signInOIDC(signInOIDCInput: $signInOIDCInput) {
+          access_token
+          user {
+            id
+            email
+            name
+          }
+        }
+      }
+    `;
+
+    it('should sign in the user and return access token', async () => {
+      // Arrange
+      jest
+        .spyOn(jwt, 'verify')
+        .mockImplementation((_token, _getKey, _options, callback) => {
+          const mockPayload = { name: 'User Name', email: 'user@email.com' };
+          if (callback) {
+            callback(null, mockPayload);
+          }
+        });
+
+      // Act
+      const response = await gqlRequest(signInOIDCQuery, { signInOIDCInput });
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeFalsy();
+      expect(response.body.data.signInOIDC.access_token).toBeTruthy();
+      expect(response.body.data.signInOIDC.user).toBeTruthy();
+      expect(response.body.data.signInOIDC.user.id).toBeTruthy();
+      expect(response.body.data.signInOIDC.user.email).toBeTruthy();
+      expect(response.body.data.signInOIDC.user.name).toBeTruthy();
+    });
+
+    it('should create the user if it does not exist', async () => {
+      // Arrange
+      jest
+        .spyOn(jwt, 'verify')
+        .mockImplementation((_token, _getKey, _options, callback) => {
+          const mockPayload = { name: 'New User', email: 'newuser@email.com' };
+          if (callback) {
+            callback(null, mockPayload);
+          }
+        });
+
+      // Act
+      const response = await gqlRequest(signInOIDCQuery, { signInOIDCInput });
+
+      // Assert
+      const newUser = await userRepository.query(
+        'SELECT id, name, email FROM "user" WHERE email = "newuser@email.com"'
+      );
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeFalsy();
+      expect(newUser).toBeTruthy();
+    });
+
+    it('should return error if ID token is invalid', async () => {
+      // Arrange
+      jest
+        .spyOn(jwt, 'verify')
+        .mockImplementation((_token, _getKey, _options, callback) => {
+          if (callback) {
+            callback(new Error('invalid') as jwt.VerifyErrors, null);
+          }
+        });
+
+      // Act
+      const response = await gqlRequest(signInOIDCQuery, { signInOIDCInput });
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeTruthy();
+      expect(response.body.data).toBeFalsy();
+    });
+  });
+
   describe('updatePassword', () => {
     const updatePasswordInput: UpdatePasswordInput = {
       oldPassword: 'Pass123!',
@@ -229,7 +315,7 @@ describe('AuthResolver E2E', () => {
 
       // Assert
       expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Invalid user');
+      expect(response.body.errors[0].message).toEqual('Invalid access token');
     });
 
     it('should return an error if the old password is incorrect', async () => {

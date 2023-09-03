@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { UserService } from '../users/user.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { User } from '../users/user.entity';
+import * as jwt from 'jsonwebtoken';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -30,6 +31,7 @@ describe('AuthService', () => {
         {
           provide: UserService,
           useValue: {
+            create: jest.fn(() => Promise.resolve(mockUser)),
             findOneByEmail: jest.fn(() => Promise.resolve(mockUser)),
             findOneById: jest.fn(() => Promise.resolve(mockUser)),
             updatePassword: jest.fn(() => Promise.resolve(mockUser))
@@ -89,6 +91,66 @@ describe('AuthService', () => {
       await expect(authService.signIn(mockCredentials)).rejects.toBeInstanceOf(
         UnauthorizedException
       );
+    });
+  });
+
+  describe('signInOIDC', () => {
+    it('should return access token if successful', async () => {
+      // Arrange
+      jest
+        .spyOn(jwt, 'verify')
+        .mockImplementation((_token, _getKey, _options, callback) => {
+          const mockPayload = { name: 'User Name', email: 'user@email.com' };
+          if (callback) {
+            callback(null, mockPayload);
+          }
+        });
+
+      // Act
+      const result = await authService.signInOIDC('ID token');
+
+      // Assert
+      expect(result).toEqual({ access_token: 'access-token', user: mockUser });
+    });
+
+    it('should create user if it does not exist', async () => {
+      // Arrange
+      jest
+        .spyOn(jwt, 'verify')
+        .mockImplementation((_token, _getKey, _options, callback) => {
+          const mockPayload = { name: 'User Name', email: 'user@email.com' };
+          if (callback) {
+            callback(null, mockPayload);
+          }
+        });
+
+      userService.findOneByEmail = () => undefined;
+
+      // Act
+      await authService.signInOIDC('ID token');
+
+      // Assert
+      expect(userService.create).toHaveBeenCalledWith(
+        'User Name',
+        'user@email.com'
+      );
+    });
+
+    it('should return exception if token is invalid', async () => {
+      // Arrange
+      jest
+        .spyOn(jwt, 'verify')
+        .mockImplementation((_token, _getKey, _options, callback) => {
+          if (callback) {
+            callback(new Error('invalid') as jwt.VerifyErrors, null);
+          }
+        });
+
+      // Act
+      const result = authService.signInOIDC('ID token');
+
+      // Assert
+      await expect(result).rejects.toBeInstanceOf(UnauthorizedException);
     });
   });
 

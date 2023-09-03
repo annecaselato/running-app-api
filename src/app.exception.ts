@@ -9,7 +9,7 @@ interface OriginalError {
 export class ExceptionHandler {
   public static formatApolloError(error: GraphQLFormattedError) {
     const { code, originalError } = error.extensions;
-    const originalMessage = (originalError as OriginalError).message;
+    const originalMessage = (originalError as OriginalError)?.message;
 
     if (code === ApolloServerErrorCode.BAD_REQUEST) {
       return {

@@ -12,27 +12,27 @@ import * as bcrypt from 'bcrypt';
 @Entity()
 @ObjectType()
 export class User {
-  @PrimaryGeneratedColumn('uuid')
   @Field()
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
   @Field()
+  @Column()
   name: string;
 
-  @Column()
   @Field()
+  @Column()
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   password?: string;
 
-  @CreateDateColumn()
   @Field()
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn()
   @Field()
+  @UpdateDateColumn()
   updatedAt: Date;
 
   @BeforeInsert()

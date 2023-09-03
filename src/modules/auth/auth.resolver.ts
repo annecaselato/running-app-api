@@ -1,6 +1,11 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
-import { SignInInput, SignInResponse, UpdatePasswordInput } from './dto';
+import {
+  SignInInput,
+  SignInOIDCInput,
+  SignInResponse,
+  UpdatePasswordInput
+} from './dto';
 import { AuthUser, PublicRoute } from '../../shared/decorators';
 import { User } from '../users/user.entity';
 
@@ -12,6 +17,12 @@ export class AuthResolver {
   @Mutation(() => SignInResponse)
   signIn(@Args('signInInput') signInInput: SignInInput) {
     return this.authService.signIn(signInInput);
+  }
+
+  @PublicRoute()
+  @Mutation(() => SignInResponse)
+  signInOIDC(@Args('signInOIDCInput') signInOIDCInput: SignInOIDCInput) {
+    return this.authService.signInOIDC(signInOIDCInput.token);
   }
 
   @Mutation(() => String)

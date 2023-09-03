@@ -27,6 +27,7 @@ type Query {
 
 type Mutation {
   signIn(signInInput: SignInInput!): SignInResponse!
+  signInOIDC(signInOIDCInput: SignInOIDCInput!): SignInResponse!
   updatePassword(updatePasswordInput: UpdatePasswordInput!): String!
   createUser(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
@@ -36,6 +37,10 @@ type Mutation {
 input SignInInput {
   email: String!
   password: String!
+}
+
+input SignInOIDCInput {
+  token: String!
 }
 
 input UpdatePasswordInput {

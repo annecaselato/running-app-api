@@ -48,7 +48,7 @@ describe('UserService', () => {
       };
 
       // Act
-      await userService.create(newUser);
+      await userService.create(newUser.name, newUser.email, newUser.password);
 
       // Assert
       expect(userRepository.create).toHaveBeenCalledWith(newUser);

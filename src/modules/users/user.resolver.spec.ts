@@ -22,7 +22,12 @@ describe('UserResolver', () => {
         {
           provide: UserService,
           useFactory: () => ({
-            create: jest.fn((newUser) => ({ id: '1', ...newUser })),
+            create: jest.fn((name, email, password) => ({
+              id: '1',
+              name,
+              email,
+              password
+            })),
             update: jest.fn(() => authUser),
             delete: jest.fn(() => ({})),
             findOneById: jest.fn(() => authUser)
@@ -53,7 +58,11 @@ describe('UserResolver', () => {
 
       // Assert
       expect(result).toEqual({ id: '1', ...newUser });
-      expect(createSpy).toHaveBeenCalledWith(newUser);
+      expect(createSpy).toHaveBeenCalledWith(
+        newUser.name,
+        newUser.email,
+        newUser.password
+      );
     });
   });
 

@@ -11,7 +11,8 @@ export class UserResolver {
   @PublicRoute()
   @Mutation(() => User)
   createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
-    return this.userService.create(createUserInput);
+    const { name, email, password } = createUserInput;
+    return this.userService.create(name, email, password);
   }
 
   @Mutation(() => User)

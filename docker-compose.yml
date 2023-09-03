@@ -22,6 +22,8 @@ services:
       DB_PASSWORD: 2oZS2tX4qv7uuzDf
       DB_PORT: 5432
       JWT_SECRET: v4zq5y44ahqvek48rs5kwfjpueeuo78ppxho5s2opefehg674qqrafoh289dahha
+      GOOGLE_JWKS_URI: https://www.googleapis.com/oauth2/v3/certs
+      GOOGLE_CLIENT_ID: 593642618419-k3d219i6bq2kkmdk23c8r6ad3nm1h37o.apps.googleusercontent.com
     networks:
       - running-connect
     depends_on:
