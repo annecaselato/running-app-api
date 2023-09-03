@@ -1,7 +1,7 @@
 name: Deployment
 
 on:
-  merge:
+  push:
     branches: [ stage ]
 jobs:
   build:
@@ -31,5 +31,4 @@ jobs:
           git fetch --all &&
           git reset --hard origin/stage &&
           git pull origin stage &&
-          docker-compose -f docker-compose.stage.yml up -d --build
-        '
+          docker-compose -f docker-compose.stage.yml up -d --build'
