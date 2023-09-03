@@ -26,3 +26,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     networks:
       - dockernet
+
+networks:
+  dockernet:
+    external: true
