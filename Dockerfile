@@ -1,28 +1,28 @@
-FROM node:16-alpine AS development
+# Building layer
+FROM node:16-alpine as development
 
-WORKDIR /usr/src/app
 
+WORKDIR /app
+
+COPY tsconfig*.json ./
 COPY package*.json ./
 
-RUN npm install --only=development
+RUN npm ci
 
-COPY . .
+COPY src/ src/
 
 RUN npm run build
 
-FROM node:16-alpine AS production
 
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
+FROM node:16-alpine as production
 
-WORKDIR /usr/src/app
+
+WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --only=production
+RUN npm ci --omit=dev
 
-COPY . .
+COPY --from=development /app/dist/ ./dist/
 
-COPY --from=development /usr/src/app/dist ./dist
-
-CMD ["node", "dist/main"]
+CMD [ "node", "dist/main.js" ]

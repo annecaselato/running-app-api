@@ -4,39 +4,28 @@ on:
   push:
     branches: [ stage ]
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Test
+      - name: Build
         uses: actions/setup-node@v3
         with:
           node-version: '16'
           cache: 'npm'
-      - run: npm install
+      - run: npm ci
       - run: npm run lint
       - run: npm test
-      - run: npm run test:e2e
-      - run: npm run build
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Deploy application
-        env:
-          PRIVATE_KEY: ${{ secrets.CERTIFICATE }}
-          HOSTNAME : ${{ secrets.HOSTNAME }}
-          USERNAME : ${{ secrets.USERNAME }}
-        run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USERNAME}@${HOSTNAME} '
-
-          cd running-app-api/ &&
-          git checkout stage &&
-          git fetch --all &&
-          git reset --hard origin/stage &&
-          git pull origin stage &&
-          npm install &&
-          npm run build &&
-          docker-compose -f docker-compose.stage.yml up -d --build'
+      - run: npm build
+      - name: Deploy
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.CERTIFICATE }}
+          REMOTE_HOST: ${{ secrets.HOSTNAME }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: /home/${{ secrets.USERNAME }}/running-app-api
+          SCRIPT_AFTER: |
+            echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+            ssh -o StrictHostKeyChecking=no -i private_key ${USERNAME}@${HOSTNAME} '
+            cd running-app-api/ &&
+            docker-compose -f docker-compose.stage.yml up -d --build'
