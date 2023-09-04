@@ -24,7 +24,5 @@ jobs:
           REMOTE_USER: ${{ secrets.USERNAME }}
           TARGET: /home/${{ secrets.USERNAME }}/running-app-api
           SCRIPT_AFTER: |
-            echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-            ssh -o StrictHostKeyChecking=no -i private_key ${USERNAME}@${HOSTNAME} '
             cd running-app-api/ &&
             docker-compose -f docker-compose.stage.yml up -d --build'
