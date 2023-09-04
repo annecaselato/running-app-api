@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Test and Build
+      - name: Test
         uses: actions/setup-node@v3
         with:
           node-version: '16'
@@ -37,4 +37,6 @@ jobs:
           git fetch --all &&
           git reset --hard origin/stage &&
           git pull origin stage &&
+          npm install &&
+          npm run build &&
           docker-compose -f docker-compose.stage.yml up -d --build'
