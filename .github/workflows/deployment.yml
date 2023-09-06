@@ -14,7 +14,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
-      - run: docker build --file Dockerfile --tag running-api:stage
+      - run: docker build --file Dockerfile --tag running-api:stage .
       - run: docker save running-api:stage | gzip > image/runningapi_latest.tar.gz
       - name: Deploy
         uses: easingthemes/ssh-deploy@main
