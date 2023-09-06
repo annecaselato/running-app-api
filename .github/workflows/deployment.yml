@@ -25,4 +25,6 @@ jobs:
           REMOTE_USER: ${{ secrets.USERNAME }}
           SOURCE: image/
           TARGET: /home/${{ secrets.USERNAME }}/
-          SCRIPT_AFTER: ./start-app.sh
+          SCRIPT_AFTER: |
+            chmod +x start-app.sh
+            ./start-app.sh
