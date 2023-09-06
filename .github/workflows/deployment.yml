@@ -15,13 +15,13 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: docker build --file Dockerfile --tag running-api:stage .
-      - run: docker save running-api:stage | gzip > image/runningapi_latest.tar.gz
+      - run: docker save running-api:stage | gzip > runningapi_latest.tar.gz
       - name: Deploy
         uses: easingthemes/ssh-deploy@main
         with:
           SSH_PRIVATE_KEY: ${{ secrets.CERTIFICATE }}
           REMOTE_HOST: ${{ secrets.HOSTNAME }}
           REMOTE_USER: ${{ secrets.USERNAME }}
-          SOURCE: image/
+          INCLUDE: runningapi_latest.tar.gz
           TARGET: /home/${{ secrets.USERNAME }}/
           SCRIPT_AFTER: ./start-app.sh
