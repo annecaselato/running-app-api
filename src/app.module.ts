@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/users/user.module';
 import { ExceptionHandler } from './app.exception';
 import { AuthModule } from './modules/auth/auth.module';
+import { TypeModule } from './modules/types/type.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     AuthModule,
     HealthModule,
+    TypeModule,
     UserModule
   ]
 })

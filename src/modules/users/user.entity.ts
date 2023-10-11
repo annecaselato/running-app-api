@@ -4,10 +4,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Activity } from '../activity/activity.entity';
+import { ActivityType } from '../types/activity-type.entity';
 
 @Entity()
 @ObjectType()
@@ -34,6 +37,14 @@ export class User {
   @Field()
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Field(() => [Activity])
+  @OneToMany(() => Activity, (activity) => activity.user)
+  activities: Activity[];
+
+  @Field(() => [ActivityType])
+  @OneToMany(() => ActivityType, (type) => type.user)
+  types: ActivityType[];
 
   @BeforeInsert()
   public async hashPassword(): Promise<void> {

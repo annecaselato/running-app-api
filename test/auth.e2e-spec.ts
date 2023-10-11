@@ -16,6 +16,8 @@ import { UserModule } from '../src/modules/users/user.module';
 import { AuthGuard } from '../src/modules/auth/auth.guard';
 import { AuthResolver } from '../src/modules/auth/auth.resolver';
 import { AuthService } from '../src/modules/auth/auth.service';
+import { Activity } from '../src/modules/activity/activity.entity';
+import { ActivityType } from '../src/modules/types/activity-type.entity';
 
 describe('AuthResolver E2E', () => {
   let app: INestApplication;
@@ -66,7 +68,7 @@ describe('AuthResolver E2E', () => {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User],
+          entities: [User, Activity, ActivityType],
           logging: true,
           synchronize: true
         }),

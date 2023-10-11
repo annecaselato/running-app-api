@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 import { UserResolver } from './user.resolver';
-import { IsUniqueEmailConstraint } from './validators/EmailValidator';
+import { IsUniqueEmailConstraint } from './validators/unique-email.validator';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User])],
