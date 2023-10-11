@@ -1,5 +1,5 @@
 # Building layer
-FROM node:16-alpine as development
+FROM node:16-alpine AS development
 
 
 WORKDIR /app
@@ -14,7 +14,7 @@ COPY src/ src/
 RUN npm run build
 
 
-FROM node:16-alpine as production
+FROM node:16-alpine AS production
 
 
 WORKDIR /app

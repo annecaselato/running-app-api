@@ -8,8 +8,8 @@ services:
       context: .
       target: development
     volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
+      - .:/app
+      - /app/node_modules
     ports:
       - 8080:8080
     command: npm run start:dev
@@ -23,7 +23,7 @@ services:
       DB_PORT: 5432
       JWT_SECRET: v4zq5y44ahqvek48rs5kwfjpueeuo78ppxho5s2opefehg674qqrafoh289dahha
       GOOGLE_JWKS_URI: https://www.googleapis.com/oauth2/v3/certs
-      GOOGLE_CLIENT_ID: 593642618419-k3d219i6bq2kkmdk23c8r6ad3nm1h37o.apps.googleusercontent.com
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     networks:
       - running-connect
     depends_on:
