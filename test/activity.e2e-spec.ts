@@ -11,13 +11,13 @@ import { useContainer } from 'class-validator';
 import { ActivityType } from '../src/modules/activity/activity-type.entity';
 import { AuthGuard } from '../src/modules/auth/auth.guard';
 import { ExceptionHandler } from '../src/app.exception';
-import { CreateTypeInput } from '../src/modules/activity/dto';
+import { CreateActivityInput } from '../src/modules/activity/dto';
 import { Activity } from '../src/modules/activity/activity.entity';
 import { User } from '../src/modules/users/user.entity';
 import { ActivityModule } from '../src/modules/activity/activity.module';
 import { UserModule } from '../src/modules/users/user.module';
 
-describe('TypeResolver E2E', () => {
+describe('ActivityResolver E2E', () => {
   let app: INestApplication;
   let typeRepository: Repository<ActivityType>;
   let userRepository: Repository<User>;
@@ -49,7 +49,7 @@ describe('TypeResolver E2E', () => {
           type: 'sqlite',
           database: ':memory:',
           entities: [ActivityType, Activity, User],
-          logging: false,
+          logging: true,
           synchronize: true
         }),
         GraphQLModule.forRoot({
@@ -95,10 +95,6 @@ describe('TypeResolver E2E', () => {
     );
 
     await typeRepository.query(
-      'INSERT INTO "activity_type"("id", "type", "description", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e62", "New Run", null, "user-id")'
-    );
-
-    await typeRepository.query(
       'INSERT INTO "activity_type"("id", "type", "description", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e65", "New Run", null, "user-id")'
     );
 
@@ -117,97 +113,42 @@ describe('TypeResolver E2E', () => {
     await userRepository.query('DELETE FROM user');
   });
 
-  describe('createType', () => {
-    const createTypeInput: CreateTypeInput = {
-      type: 'Run',
-      description: 'Easy pace run.'
+  describe('createActivity', () => {
+    const createActivityInput: CreateActivityInput = {
+      datetime: new Date().toISOString(),
+      status: 'Planned',
+      typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e65',
+      goalDistance: 5.0,
+      distance: 2.5,
+      goalDuration: '00:30:00',
+      duration: '00:20:00'
     };
 
     const query = `
-      mutation ($createTypeInput: CreateTypeInput!) {
-        createType(createTypeInput: $createTypeInput) {
+      mutation ($createActivityInput: CreateActivityInput!) {
+        createActivity(createActivityInput: $createActivityInput) {
           id
         }
       }
     `;
 
-    it('should create type if all parameters are valid', async () => {
+    it('should create activity if all parameters are valid', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { createTypeInput });
+      const response = await gqlRequestWithAuth(query, { createActivityInput });
 
       // Assert
       expect(response.status).toEqual(200);
       expect(response.body.errors).toBeFalsy();
-      expect(response.body.data.createType.id).toBeTruthy();
-    });
-
-    it('should return an error if the type already exist', async () => {
-      // Act
-      const response = await gqlRequestWithAuth(query, {
-        createTypeInput: {
-          type: 'New Run',
-          description: 'Easy pace run.'
-        }
-      });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Type already exist');
-    });
-
-    it('should return an error if type is invalid', async () => {
-      // Act
-      const response = await gqlRequestWithAuth(query, {
-        createTypeInput: {
-          ...createTypeInput,
-          type: ''
-        }
-      });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual(
-        'type should not be empty'
-      );
-    });
-  });
-
-  describe('updateType', () => {
-    const updateTypeInput = {
-      id: '1e2e860e-befa-4407-83dd-84fa1d2b1e62',
-      type: 'UpdatedType',
-      description: 'Updated description'
-    };
-
-    const query = `
-      mutation ($updateTypeInput: UpdateTypeInput!) {
-        updateType(updateTypeInput: $updateTypeInput) {
-          id
-          type
-          description
-        }
-      }
-    `;
-
-    it('should update a type if all parameters are valid', async () => {
-      // Act
-      const response = await gqlRequestWithAuth(query, { updateTypeInput });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors).toBeFalsy();
-      const updatedType = response.body.data.updateType;
-      expect(updatedType.id).toBeTruthy();
-      expect(updatedType.type).toEqual('UpdatedType');
-      expect(updatedType.description).toEqual('Updated description');
+      expect(response.body.data.createActivity).toBeTruthy();
     });
 
     it('should return an error if the type does not exist', async () => {
-      const nonExistentId = '1e2e860e-befa-4407-83dd-84fa1d2b1e63';
-
       // Act
       const response = await gqlRequestWithAuth(query, {
-        updateTypeInput: { ...updateTypeInput, id: nonExistentId }
+        createActivityInput: {
+          ...createActivityInput,
+          typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e60'
+        }
       });
 
       // Assert
@@ -216,117 +157,161 @@ describe('TypeResolver E2E', () => {
     });
   });
 
-  describe('deleteType', () => {
-    const deleteTypeInput = {
-      id: '1e2e860e-befa-4407-83dd-84fa1d2b1e62'
+  describe('updateActivity', () => {
+    const updateActivityInput = {
+      id: '1e2e860e-befa-4407-83dd-84fa1d2b1e12',
+      datetime: new Date().toISOString(),
+      status: 'Completed',
+      typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e65'
     };
 
     const query = `
-      mutation ($deleteTypeInput: IDInput!) {
-        deleteType(deleteTypeInput: $deleteTypeInput)
+      mutation ($updateActivityInput: UpdateActivityInput!) {
+        updateActivity(updateActivityInput: $updateActivityInput) {
+          id
+          status
+        }
       }
     `;
 
-    it('should delete a type if it exists', async () => {
+    it('should update activity if the activity and type exist', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { deleteTypeInput });
+      const response = await gqlRequestWithAuth(query, { updateActivityInput });
 
       // Assert
       expect(response.status).toEqual(200);
       expect(response.body.errors).toBeFalsy();
-      const deletedTypeId = response.body.data.deleteType;
-      expect(deletedTypeId).toEqual('1e2e860e-befa-4407-83dd-84fa1d2b1e62');
+      expect(response.body.data.updateActivity.status).toBe('Completed');
     });
 
-    it('should not return an error if the type does not exist', async () => {
-      const nonExistentId = '1e2e860e-befa-4407-83dd-84fa1d2b1e63';
-
+    it('should return an error if the activity does not exist', async () => {
       // Act
       const response = await gqlRequestWithAuth(query, {
-        deleteTypeInput: { id: nonExistentId }
+        updateActivityInput: {
+          ...updateActivityInput,
+          id: '1e2e860e-befa-4407-83dd-84fa1d2b1e11'
+        }
       });
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors[0].message).toEqual('Activity not found');
+    });
+
+    it('should return an error if the type does not exist', async () => {
+      // Act
+      const response = await gqlRequestWithAuth(query, {
+        updateActivityInput: {
+          ...updateActivityInput,
+          typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e60'
+        }
+      });
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors[0].message).toEqual('Type not found');
+    });
+  });
+
+  describe('deleteActivity', () => {
+    const deleteActivityInput = {
+      id: '1e2e860e-befa-4407-83dd-84fa1d2b1e12'
+    };
+
+    const query = `
+      mutation ($deleteActivityInput: IDInput!) {
+        deleteActivity(deleteActivityInput: $deleteActivityInput)
+      }
+    `;
+
+    it('should delete activity if it exists', async () => {
+      // Act
+      const response = await gqlRequestWithAuth(query, { deleteActivityInput });
 
       // Assert
       expect(response.status).toEqual(200);
       expect(response.body.errors).toBeFalsy();
-    });
-
-    it('should return an error if the type is being used', async () => {
-      // Arrange
-
-      // Act
-      const response = await gqlRequestWithAuth(query, {
-        deleteTypeInput: { id: '1e2e860e-befa-4407-83dd-84fa1d2b1e65' }
-      });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual(
-        'Type is being used by activities'
+      expect(response.body.data.deleteActivity).toEqual(
+        '1e2e860e-befa-4407-83dd-84fa1d2b1e12'
       );
     });
-  });
 
-  describe('getType', () => {
-    const getTypeInput = {
-      id: '1e2e860e-befa-4407-83dd-84fa1d2b1e62'
-    };
-
-    const query = `
-      query ($getTypeInput: IDInput!) {
-        getType(getTypeInput: $getTypeInput) {
-          id
-          type
-          description
-        }
-      }
-    `;
-
-    it('should return the type if it exists', async () => {
-      // Act
-      const response = await gqlRequestWithAuth(query, { getTypeInput });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors).toBeFalsy();
-      const type = response.body.data.getType;
-      expect(type).toBeTruthy();
-    });
-
-    it('should return error if the type is not found', async () => {
-      const nonExistentId = '1e2e860e-befa-4407-83dd-84fa1d2b1e63';
-
+    it('should not return an error if the activity does not exist', async () => {
       // Act
       const response = await gqlRequestWithAuth(query, {
-        getTypeInput: { id: nonExistentId }
+        deleteActivityInput: { id: '1e2e860e-befa-4407-83dd-84fa1d2b1e11' }
       });
 
       // Assert
       expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Type not found');
+      expect(response.body.errors).toBeFalsy();
     });
   });
 
-  describe('listTypes', () => {
+  describe('getActivity', () => {
+    const getActivityInput = {
+      id: '1e2e860e-befa-4407-83dd-84fa1d2b1e12'
+    };
+
     const query = `
-      query {
-        listTypes {
+      query ($getActivityInput: IDInput!) {
+        getActivity(getActivityInput: $getActivityInput) {
           id
-          type
-          description
+          status
         }
       }
     `;
 
-    it('should return a list of types', async () => {
+    it('should retrieve activity if it exists', async () => {
+      // Act
+      const response = await gqlRequestWithAuth(query, { getActivityInput });
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeFalsy();
+      expect(response.body.data.getActivity.status).toBe('Planned');
+    });
+
+    it('should return an error if the activity id is invalid', async () => {
+      // Act
+      const response = await gqlRequestWithAuth(query, {
+        getActivityInput: { id: 'invalid' }
+      });
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors[0].message).toEqual('id must be a UUID');
+    });
+
+    it('should return an error if the activity does not exist', async () => {
+      // Act
+      const response = await gqlRequestWithAuth(query, {
+        getActivityInput: { id: '1e2e860e-befa-4407-83dd-84fa1d2b1e11' }
+      });
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors[0].message).toEqual('Activity not found');
+    });
+  });
+
+  describe('listActivities', () => {
+    const query = `
+      query {
+        listActivities {
+          id
+        }
+      }
+    `;
+
+    it('should retrieve a list of activities', async () => {
       // Act
       const response = await gqlRequestWithAuth(query, {});
 
       // Assert
       expect(response.status).toEqual(200);
       expect(response.body.errors).toBeFalsy();
-      const types = response.body.data.listTypes;
-      expect(types).toBeTruthy();
+      expect(response.body.data.listActivities.length).toBeGreaterThan(0);
     });
   });
 });

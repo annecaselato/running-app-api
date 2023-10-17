@@ -1,14 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { ActivityType } from './activity-type.entity';
 import { TypeResolver } from './type.resolver';
 import { TypeService } from './type.service';
-import { CreateTypeInput, GetTypeInput, UpdateTypeInput } from './dto';
-import { User } from 'modules/users/user.entity';
-import { BadRequestException } from '@nestjs/common';
+import { ActivityService } from './activity.service';
+import { CreateTypeInput, UpdateTypeInput } from './dto';
+import { User } from '../users/user.entity';
+import { IDInput } from '../../shared/dto/id.input';
+import { Activity } from './activity.entity';
 
 describe('TypeResolver', () => {
   let typeResolver: TypeResolver;
   let typeService: TypeService;
+  let activityService: ActivityService;
 
   const mockUser = {
     id: 'user-id'
@@ -34,12 +38,17 @@ describe('TypeResolver', () => {
             findByType: jest.fn(() => undefined),
             list: jest.fn(() => [mockType])
           })
+        },
+        {
+          provide: ActivityService,
+          useFactory: () => ({ findByType: jest.fn(() => []) })
         }
       ]
     }).compile();
 
     typeResolver = module.get<TypeResolver>(TypeResolver);
     typeService = module.get<TypeService>(TypeService);
+    activityService = module.get<ActivityService>(ActivityService);
   });
 
   describe('createType', () => {
@@ -114,7 +123,7 @@ describe('TypeResolver', () => {
   describe('deleteType', () => {
     it('should return the deleted type ID', async () => {
       // Arrange
-      const input: GetTypeInput = {
+      const input: IDInput = {
         id: 'type-id'
       };
 
@@ -127,7 +136,7 @@ describe('TypeResolver', () => {
 
     it('should return the ID if type not found', async () => {
       // Arrange
-      const input: GetTypeInput = {
+      const input: IDInput = {
         id: 'non-existent-type-id'
       };
 
@@ -141,12 +150,33 @@ describe('TypeResolver', () => {
       // Assert
       expect(result).toEqual('non-existent-type-id');
     });
+
+    it('shoud return an exception if type is being used', async () => {
+      // Arrange
+      const input: IDInput = {
+        id: 'type-id'
+      };
+
+      jest
+        .spyOn(activityService, 'findByType')
+        .mockImplementation(() =>
+          Promise.resolve([
+            { datetime: new Date(), status: 'Planned' } as Activity
+          ])
+        );
+
+      // Act
+      const result = await typeResolver.deleteType(input, mockUser);
+
+      // Assert
+      expect(result).toBeInstanceOf(BadRequestException);
+    });
   });
 
   describe('getType', () => {
     it('should return an activity type by ID', async () => {
       // Arrange
-      const input: GetTypeInput = {
+      const input: IDInput = {
         id: 'type-id'
       };
 
@@ -159,7 +189,7 @@ describe('TypeResolver', () => {
 
     it('should return an exception if type not found', async () => {
       // Arrange
-      const input: GetTypeInput = {
+      const input: IDInput = {
         id: 'non-existent-type-id'
       };
 

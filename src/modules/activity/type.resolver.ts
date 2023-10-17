@@ -1,14 +1,19 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { BadRequestException } from '@nestjs/common';
+import { ActivityService } from './activity.service';
 import { TypeService } from './type.service';
 import { ActivityType } from './activity-type.entity';
-import { CreateTypeInput, GetTypeInput, UpdateTypeInput } from './dto';
+import { CreateTypeInput, UpdateTypeInput } from './dto';
 import { User } from '../users/user.entity';
 import { AuthUser } from '../../shared/decorators';
+import { IDInput } from '../../shared/dto/id.input';
 
 @Resolver(() => ActivityType)
 export class TypeResolver {
-  constructor(private readonly typeService: TypeService) {}
+  constructor(
+    private readonly typeService: TypeService,
+    private readonly activityService: ActivityService
+  ) {}
 
   @Mutation(() => ActivityType)
   async createType(
@@ -36,10 +41,17 @@ export class TypeResolver {
 
   @Mutation(() => String)
   async deleteType(
-    @Args('deleteTypeInput') input: GetTypeInput,
+    @Args('deleteTypeInput') input: IDInput,
     @AuthUser() authUser: User
   ) {
     const type = await this.typeService.findById(input.id, authUser.id);
+    const activities = await this.activityService.findByType(
+      input.id,
+      authUser.id
+    );
+
+    if (activities.length)
+      return new BadRequestException('Type is being used by activities');
 
     if (type) {
       await this.typeService.delete(input.id);
@@ -50,7 +62,7 @@ export class TypeResolver {
 
   @Query(() => ActivityType)
   async getType(
-    @Args('getTypeInput') input: GetTypeInput,
+    @Args('getTypeInput') input: IDInput,
     @AuthUser() authUser: User
   ) {
     return (

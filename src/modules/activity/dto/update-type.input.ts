@@ -15,8 +15,8 @@ export class UpdateTypeInput {
   type: string;
 
   @IsString()
-  @Transform(({ value }) => value.trim())
   @IsOptional()
+  @Transform(({ value }) => (value ? value.trim() : null))
   @Field({ nullable: true })
   description?: string;
 }

@@ -3,7 +3,7 @@ import { IsUUID } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 @InputType()
-export class GetTypeInput {
+export class IDInput {
   @IsUUID()
   @Transform(({ value }) => value.trim())
   @Field()

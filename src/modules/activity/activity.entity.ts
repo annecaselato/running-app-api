@@ -8,7 +8,7 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 import { User } from '../users/user.entity';
-import { ActivityType } from '../types/activity-type.entity';
+import { ActivityType } from './activity-type.entity';
 
 @Entity()
 @ObjectType()
@@ -25,20 +25,20 @@ export class Activity {
   @Column()
   status: string;
 
-  @Field()
-  @Column()
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   goalDistance?: number;
 
-  @Field()
-  @Column()
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   distance?: number;
 
-  @Field()
-  @Column()
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   goalDuration?: string;
 
-  @Field()
-  @Column()
+  @Field({ nullable: true })
+  @Column({ nullable: true })
   duration?: string;
 
   @Field()
@@ -50,7 +50,7 @@ export class Activity {
   updatedAt: Date;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.activities)
+  @ManyToOne(() => User, (user) => user.activities, { onDelete: 'CASCADE' })
   user: User;
 
   @Field(() => ActivityType)

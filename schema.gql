@@ -2,12 +2,21 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type ActivityType {
+  id: String!
+  type: String!
+  description: String
+  activities: [Activity!]!
+}
+
 type User {
   id: String!
   name: String!
   email: String!
   createdAt: DateTime!
   updatedAt: DateTime!
+  activities: [Activity!]!
+  types: [ActivityType!]!
 }
 
 """
@@ -15,23 +24,83 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type Activity {
+  id: String!
+  datetime: DateTime!
+  status: String!
+  goalDistance: Float
+  distance: Float
+  goalDuration: String
+  duration: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  user: User!
+  type: ActivityType!
+}
+
 type SignInResponse {
   access_token: String!
   user: User!
 }
 
 type Query {
+  getActivity(getActivityInput: IDInput!): Activity!
+  listActivities: [Activity!]!
+  getType(getTypeInput: IDInput!): ActivityType!
+  listTypes: [ActivityType!]!
   me: User!
   checkHealth: String!
 }
 
+input IDInput {
+  id: String!
+}
+
 type Mutation {
+  createActivity(createActivityInput: CreateActivityInput!): Activity!
+  updateActivity(updateActivityInput: UpdateActivityInput!): Activity!
+  deleteActivity(deleteActivityInput: IDInput!): String!
+  createType(createTypeInput: CreateTypeInput!): ActivityType!
+  updateType(updateTypeInput: UpdateTypeInput!): ActivityType!
+  deleteType(deleteTypeInput: IDInput!): String!
   signIn(signInInput: SignInInput!): SignInResponse!
   signInOIDC(signInOIDCInput: SignInOIDCInput!): SignInResponse!
   updatePassword(updatePasswordInput: UpdatePasswordInput!): String!
   createUser(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
   deleteUser: String!
+}
+
+input CreateActivityInput {
+  datetime: String!
+  status: String!
+  typeId: String!
+  goalDistance: Float
+  distance: Float
+  goalDuration: String
+  duration: String
+}
+
+input UpdateActivityInput {
+  id: String!
+  datetime: String!
+  status: String!
+  typeId: String!
+  goalDistance: Float
+  distance: Float
+  goalDuration: String
+  duration: String
+}
+
+input CreateTypeInput {
+  type: String!
+  description: String
+}
+
+input UpdateTypeInput {
+  id: String!
+  type: String!
+  description: String
 }
 
 input SignInInput {

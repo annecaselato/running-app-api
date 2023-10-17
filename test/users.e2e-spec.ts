@@ -14,7 +14,7 @@ import { CreateUserInput } from '../src/modules/users/dto';
 import { AuthGuard } from '../src/modules/auth/auth.guard';
 import { ExceptionHandler } from '../src/app.exception';
 import { Activity } from '../src/modules/activity/activity.entity';
-import { ActivityType } from '../src/modules/types/activity-type.entity';
+import { ActivityType } from '../src/modules/activity/activity-type.entity';
 
 describe('UserResolver E2E', () => {
   let app: INestApplication;
@@ -56,7 +56,7 @@ describe('UserResolver E2E', () => {
           type: 'sqlite',
           database: ':memory:',
           entities: [User, Activity, ActivityType],
-          logging: true,
+          logging: false,
           synchronize: true
         }),
         GraphQLModule.forRoot({

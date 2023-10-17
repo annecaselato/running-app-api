@@ -17,7 +17,7 @@ import { AuthGuard } from '../src/modules/auth/auth.guard';
 import { AuthResolver } from '../src/modules/auth/auth.resolver';
 import { AuthService } from '../src/modules/auth/auth.service';
 import { Activity } from '../src/modules/activity/activity.entity';
-import { ActivityType } from '../src/modules/types/activity-type.entity';
+import { ActivityType } from '../src/modules/activity/activity-type.entity';
 
 describe('AuthResolver E2E', () => {
   let app: INestApplication;
@@ -69,7 +69,7 @@ describe('AuthResolver E2E', () => {
           type: 'sqlite',
           database: ':memory:',
           entities: [User, Activity, ActivityType],
-          logging: true,
+          logging: false,
           synchronize: true
         }),
         GraphQLModule.forRoot({

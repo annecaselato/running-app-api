@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TypeService } from './type.service';
 import { ActivityType } from './activity-type.entity';
-import { User } from 'modules/users/user.entity';
+import { User } from '../users/user.entity';
 
 describe('TypeService', () => {
   let typeService: TypeService;

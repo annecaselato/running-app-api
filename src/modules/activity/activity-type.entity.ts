@@ -6,7 +6,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn
 } from 'typeorm';
-import { Activity } from '../activity/activity.entity';
+import { Activity } from './activity.entity';
 import { User } from '../users/user.entity';
 
 @Entity()
@@ -24,7 +24,7 @@ export class ActivityType {
   @Column({ nullable: true })
   description?: string;
 
-  @ManyToOne(() => User, (user) => user.types)
+  @ManyToOne(() => User, (user) => user.types, { onDelete: 'CASCADE' })
   user: User;
 
   @Field(() => [Activity])
