@@ -6,7 +6,7 @@ import {
   IsStrongPassword
 } from 'class-validator';
 
-import { IsUniqueEmail } from '../validators/EmailValidator';
+import { IsUniqueEmail } from '../validators/unique-email.validator';
 import { Transform } from 'class-transformer';
 
 @InputType()
