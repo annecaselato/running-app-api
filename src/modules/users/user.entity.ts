@@ -30,6 +30,10 @@ export class User {
   @Column({ nullable: true })
   password?: string;
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  profile?: string;
+
   @Field()
   @CreateDateColumn()
   createdAt: Date;

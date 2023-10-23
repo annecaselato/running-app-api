@@ -89,6 +89,12 @@ describe('UserResolver E2E', () => {
     useContainer(app.select(UserModule), { fallbackOnErrors: true });
   });
 
+  beforeEach(async () => {
+    await userRepository.query(
+      'INSERT INTO "user"("id", "name", "email", "password", "createdAt", "updatedAt") VALUES ("userid", "User", "user@email.com", "password", datetime("now"), datetime("now"))'
+    );
+  });
+
   afterAll(async () => {
     await app.close();
   });
@@ -100,7 +106,7 @@ describe('UserResolver E2E', () => {
   describe('createUser', () => {
     const createUserInput: CreateUserInput = {
       name: 'User',
-      email: 'user@email.com',
+      email: 'newuser@email.com',
       password: 'Pass123!'
     };
 
@@ -123,13 +129,10 @@ describe('UserResolver E2E', () => {
     });
 
     it('should return an error if email is repeated', async () => {
-      // Arrange
-      await userRepository.query(
-        'INSERT INTO "user"("id", "name", "email", "password", "createdAt", "updatedAt") VALUES ("userid", "User", "user@email.com", "password", datetime("now"), datetime("now"))'
-      );
-
       // Act
-      const response = await gqlRequest(query, { createUserInput });
+      const response = await gqlRequest(query, {
+        createUserInput: { ...createUserInput, email: 'user@email.com' }
+      });
 
       // Assert
       expect(response.status).toEqual(200);
@@ -171,11 +174,6 @@ describe('UserResolver E2E', () => {
     `;
 
     it('should update the authenticated user', async () => {
-      // Arrange
-      await userRepository.query(
-        'INSERT INTO "user"("id", "name", "email", "password", "createdAt", "updatedAt") VALUES ("userid", "User", "user@email.com", "password", datetime("now"), datetime("now"))'
-      );
-
       // Act
       const response = await gqlRequestWithAuth(
         updateQuery,
@@ -190,6 +188,53 @@ describe('UserResolver E2E', () => {
     });
   });
 
+  describe('updateProfile', () => {
+    const updateProfileInput = { profile: 'Athlete' };
+
+    const updateQuery = `
+      mutation ($updateProfileInput: UpdateProfileInput!) {
+        updateProfile(updateProfileInput: $updateProfileInput) {
+          id
+          name
+          email
+          profile
+        }
+      }
+    `;
+
+    it('should update the authenticated users profile', async () => {
+      // Act
+      const response = await gqlRequestWithAuth(
+        updateQuery,
+        { updateProfileInput },
+        'userid'
+      );
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeFalsy();
+      expect(response.body.data.updateProfile.profile).toEqual(
+        updateProfileInput.profile
+      );
+    });
+
+    it('should return an error if profile is invalid', async () => {
+      // Act
+      const response = await gqlRequestWithAuth(
+        updateQuery,
+        { updateProfileInput: { profile: 'Invalid' } },
+        'userid'
+      );
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors[0].message).toEqual(
+        'profile must be one of the following values: Athlete, Coach'
+      );
+      expect(response.body.data).toBeFalsy();
+    });
+  });
+
   describe('deleteUser', () => {
     const deleteQuery = `
       mutation {
@@ -198,10 +243,6 @@ describe('UserResolver E2E', () => {
     `;
 
     it('should delete the authenticated user', async () => {
-      // Arrange
-      await userRepository.query(
-        'INSERT INTO "user"("id", "name", "email", "password", "createdAt", "updatedAt") VALUES ("userid", "User", "user@email.com", "password", datetime("now"), datetime("now"))'
-      );
       // Act
       const response = await gqlRequestWithAuth(deleteQuery, {}, 'userid');
 
@@ -222,11 +263,6 @@ describe('UserResolver E2E', () => {
     `;
 
     it('should return the authenticated user', async () => {
-      // Arrange
-      await userRepository.query(
-        'INSERT INTO "user"("id", "name", "email", "password", "createdAt", "updatedAt") VALUES ("userid", "User", "user@email.com", "password", datetime("now"), datetime("now"))'
-      );
-
       // Act
       const response = await gqlRequestWithAuth(meQuery, {}, 'userid');
 

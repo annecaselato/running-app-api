@@ -24,6 +24,10 @@ export class UserService {
     return this.userRepository.save({ id, password });
   }
 
+  async updateProfile(id: string, profile: string): Promise<User> {
+    return this.userRepository.save({ id, profile });
+  }
+
   async delete(id: string): Promise<DeleteResult> {
     return this.userRepository.delete(id);
   }
