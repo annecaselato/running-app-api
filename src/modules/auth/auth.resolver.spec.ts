@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
-import { SignInInput, SignInResponse } from './dto';
+import { SignInInput, SignInOIDCInput, SignInResponse } from './dto';
 import { User } from '../users/user.entity';
 
 describe('AuthResolver', () => {
@@ -24,6 +24,10 @@ describe('AuthResolver', () => {
               access_token: 'access-token',
               user: mockUser
             })),
+            signInOIDC: jest.fn(() => ({
+              access_token: 'access-token',
+              user: mockUser
+            })),
             updatePassword: jest.fn(() => mockUser)
           })
         }
@@ -43,6 +47,21 @@ describe('AuthResolver', () => {
 
       // Act
       const result: SignInResponse = await authResolver.signIn(signInInput);
+
+      // Assert
+      expect(result).toEqual({ access_token: 'access-token', user: mockUser });
+    });
+  });
+
+  describe('signInOIDC', () => {
+    it('should return a SignInResponse', async () => {
+      // Arrange
+      const input: SignInOIDCInput = {
+        token: 'id-token'
+      };
+
+      // Act
+      const result: SignInResponse = await authResolver.signInOIDC(input);
 
       // Assert
       expect(result).toEqual({ access_token: 'access-token', user: mockUser });
