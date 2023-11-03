@@ -1,21 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ApolloDriver } from '@nestjs/apollo';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { APP_GUARD } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import * as request from 'supertest';
 import { useContainer } from 'class-validator';
 import { ActivityType } from '../src/modules/activity/activity-type.entity';
-import { AuthGuard } from '../src/modules/auth/auth.guard';
-import { ExceptionHandler } from '../src/app.exception';
 import { CreateTypeInput } from '../src/modules/activity/dto';
 import { Activity } from '../src/modules/activity/activity.entity';
 import { User } from '../src/modules/users/user.entity';
 import { ActivityModule } from '../src/modules/activity/activity.module';
 import { UserModule } from '../src/modules/users/user.module';
+import { TestUtils } from './test-utils';
 
 describe('TypeResolver E2E', () => {
   let app: INestApplication;
@@ -41,35 +35,10 @@ describe('TypeResolver E2E', () => {
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'jwt-secret';
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        ActivityModule,
-        UserModule,
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [ActivityType, Activity, User],
-          logging: false,
-          synchronize: true
-        }),
-        GraphQLModule.forRoot({
-          driver: ApolloDriver,
-          autoSchemaFile: true,
-          formatError: ExceptionHandler.formatApolloError
-        }),
-        JwtModule.register({
-          global: true,
-          secret: process.env.JWT_SECRET,
-          signOptions: { expiresIn: '500s' }
-        })
-      ],
-      providers: [
-        {
-          provide: APP_GUARD,
-          useClass: AuthGuard
-        }
-      ]
-    }).compile();
+    const module = await new TestUtils().getModule(
+      [ActivityModule, UserModule],
+      []
+    );
 
     app = module.createNestApplication();
 
@@ -91,7 +60,7 @@ describe('TypeResolver E2E', () => {
   beforeEach(async () => {
     // Arrange
     await userRepository.query(
-      'INSERT INTO "user"("id", "name", "email", "createdAt", "updatedAt") VALUES ("user-id", "User", "user@email.com", datetime("now"), datetime("now"))'
+      'INSERT INTO "user"("id", "name", "email") VALUES ("user-id", "User", "user@email.com")'
     );
 
     await typeRepository.query(
