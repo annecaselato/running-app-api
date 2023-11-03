@@ -6,6 +6,7 @@ import { ExceptionHandler } from './app.exception';
 import { ActivityModule } from './modules/activity/activity.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { TeamModule } from './modules/teams/team.module';
 import { UserModule } from './modules/users/user.module';
 
 @Module({
@@ -29,6 +30,7 @@ import { UserModule } from './modules/users/user.module';
     ActivityModule,
     AuthModule,
     HealthModule,
+    TeamModule,
     UserModule
   ]
 })

@@ -1,7 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
-import * as request from 'supertest';
 import { useContainer } from 'class-validator';
 import { ActivityType } from '../src/modules/activity/activity-type.entity';
 import { CreateTypeInput } from '../src/modules/activity/dto';
@@ -17,22 +15,6 @@ describe('TypeResolver E2E', () => {
   let userRepository: Repository<User>;
   let activityRepository: Repository<Activity>;
 
-  const generateAuthToken = (userId: string) => {
-    const payload = { sub: userId, email: 'user@email.com', name: 'Test User' };
-    return new JwtService().sign(payload, { secret: 'jwt-secret' });
-  };
-
-  const gqlRequestWithAuth = async (query: string, variables: any) => {
-    const token = generateAuthToken('user-id');
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .set('Authorization', `Bearer ${token}`)
-      .send({
-        query,
-        variables
-      });
-  };
-
   beforeAll(async () => {
     process.env.JWT_SECRET = 'jwt-secret';
     const module = await new TestUtils().getModule(
@@ -42,12 +24,9 @@ describe('TypeResolver E2E', () => {
 
     app = module.createNestApplication();
 
-    typeRepository = module.get<Repository<ActivityType>>(
-      'ActivityTypeRepository'
-    );
-    userRepository = module.get<Repository<User>>('UserRepository');
-
-    activityRepository = module.get<Repository<Activity>>('ActivityRepository');
+    activityRepository = module.get('ActivityRepository');
+    typeRepository = module.get('ActivityTypeRepository');
+    userRepository = module.get('UserRepository');
 
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true })
@@ -102,7 +81,9 @@ describe('TypeResolver E2E', () => {
 
     it('should create type if all parameters are valid', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { createTypeInput });
+      const response = await new TestUtils().gqlRequest(app, query, {
+        createTypeInput
+      });
 
       // Assert
       expect(response.status).toEqual(200);
@@ -112,7 +93,7 @@ describe('TypeResolver E2E', () => {
 
     it('should return an error if the type already exist', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, {
+      const response = await new TestUtils().gqlRequest(app, query, {
         createTypeInput: {
           type: 'New Run',
           description: 'Easy pace run.'
@@ -126,7 +107,7 @@ describe('TypeResolver E2E', () => {
 
     it('should return an error if type is invalid', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, {
+      const response = await new TestUtils().gqlRequest(app, query, {
         createTypeInput: {
           ...createTypeInput,
           type: ''
@@ -160,7 +141,9 @@ describe('TypeResolver E2E', () => {
 
     it('should update a type if all parameters are valid', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { updateTypeInput });
+      const response = await new TestUtils().gqlRequest(app, query, {
+        updateTypeInput
+      });
 
       // Assert
       expect(response.status).toEqual(200);
@@ -175,7 +158,7 @@ describe('TypeResolver E2E', () => {
       const nonExistentId = '1e2e860e-befa-4407-83dd-84fa1d2b1e63';
 
       // Act
-      const response = await gqlRequestWithAuth(query, {
+      const response = await new TestUtils().gqlRequest(app, query, {
         updateTypeInput: { ...updateTypeInput, id: nonExistentId }
       });
 
@@ -198,7 +181,9 @@ describe('TypeResolver E2E', () => {
 
     it('should delete a type if it exists', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { deleteTypeInput });
+      const response = await new TestUtils().gqlRequest(app, query, {
+        deleteTypeInput
+      });
 
       // Assert
       expect(response.status).toEqual(200);
@@ -211,7 +196,7 @@ describe('TypeResolver E2E', () => {
       const nonExistentId = '1e2e860e-befa-4407-83dd-84fa1d2b1e63';
 
       // Act
-      const response = await gqlRequestWithAuth(query, {
+      const response = await new TestUtils().gqlRequest(app, query, {
         deleteTypeInput: { id: nonExistentId }
       });
 
@@ -224,7 +209,7 @@ describe('TypeResolver E2E', () => {
       // Arrange
 
       // Act
-      const response = await gqlRequestWithAuth(query, {
+      const response = await new TestUtils().gqlRequest(app, query, {
         deleteTypeInput: { id: '1e2e860e-befa-4407-83dd-84fa1d2b1e65' }
       });
 
@@ -253,7 +238,9 @@ describe('TypeResolver E2E', () => {
 
     it('should return the type if it exists', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { getTypeInput });
+      const response = await new TestUtils().gqlRequest(app, query, {
+        getTypeInput
+      });
 
       // Assert
       expect(response.status).toEqual(200);
@@ -266,7 +253,7 @@ describe('TypeResolver E2E', () => {
       const nonExistentId = '1e2e860e-befa-4407-83dd-84fa1d2b1e63';
 
       // Act
-      const response = await gqlRequestWithAuth(query, {
+      const response = await new TestUtils().gqlRequest(app, query, {
         getTypeInput: { id: nonExistentId }
       });
 
@@ -289,7 +276,7 @@ describe('TypeResolver E2E', () => {
 
     it('should return a list of types', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, {});
+      const response = await new TestUtils().gqlRequest(app, query, {});
 
       // Assert
       expect(response.status).toEqual(200);

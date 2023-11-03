@@ -1,14 +1,18 @@
+import * as request from 'supertest';
 import { ApolloDriver } from '@nestjs/apollo';
 import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ExceptionHandler } from '../src/app.exception';
 import { AuthGuard } from '../src/modules/auth/auth.guard';
 import { Activity } from '../src/modules/activity/activity.entity';
 import { ActivityType } from '../src/modules/activity/activity-type.entity';
+import { Team } from '../src/modules/teams/team.entity';
+import { TeamMember } from '../src/modules/teams/team-member.entity';
 import { User } from '../src/modules/users/user.entity';
+import { INestApplication } from '@nestjs/common';
 
 export class TestUtils {
   public async getModule(imports: any[], providers: any[]) {
@@ -17,7 +21,7 @@ export class TestUtils {
         TypeOrmModule.forRoot({
           type: 'sqlite',
           database: ':memory:',
-          entities: [User, Activity, ActivityType],
+          entities: [User, Activity, ActivityType, Team, TeamMember],
           logging: false,
           synchronize: true
         }),
@@ -28,7 +32,7 @@ export class TestUtils {
         }),
         JwtModule.register({
           global: true,
-          secret: process.env.JWT_SECRET,
+          secret: 'jwt-secret',
           signOptions: { expiresIn: '500s' }
         }),
         ...imports
@@ -43,5 +47,25 @@ export class TestUtils {
     }).compile();
 
     return module;
+  }
+
+  private generateAuthToken(userId: string) {
+    const payload = { sub: userId, email: 'user@email.com', name: 'Test User' };
+    return new JwtService().sign(payload, { secret: 'jwt-secret' });
+  }
+
+  public async gqlRequest(
+    app: INestApplication,
+    query: string,
+    variables: any
+  ) {
+    const token = this.generateAuthToken('user-id');
+    return request(app.getHttpServer())
+      .post('/graphql')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        query,
+        variables
+      });
   }
 }

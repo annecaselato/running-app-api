@@ -9,20 +9,42 @@ type ActivityType {
   activities: [Activity!]!
 }
 
-type User {
+type TeamMember {
   id: String!
-  name: String!
   email: String!
   createdAt: DateTime!
   updatedAt: DateTime!
-  activities: [Activity!]!
-  types: [ActivityType!]!
+  user: User!
+  team: Team!
 }
 
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+type Team {
+  id: String!
+  name: String!
+  description: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  coach: User!
+  members: [TeamMember!]!
+}
+
+type User {
+  id: String!
+  name: String!
+  email: String!
+  profile: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  activities: [Activity!]!
+  types: [ActivityType!]!
+  teams: [Team!]!
+  memberships: [TeamMember!]!
+}
 
 type Activity {
   id: String!
@@ -50,6 +72,8 @@ type Query {
   listTypes: [ActivityType!]!
   me: User!
   checkHealth: String!
+  getTeam(getTeamInput: IDInput!): [Team!]!
+  listCoachTeams: [Team!]!
 }
 
 input IDInput {
@@ -68,7 +92,11 @@ type Mutation {
   updatePassword(updatePasswordInput: UpdatePasswordInput!): String!
   createUser(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
+  updateProfile(updateProfileInput: UpdateProfileInput!): User!
   deleteUser: String!
+  createTeam(createTeamInput: CreateTeamInput!): Team!
+  updateTeam(updateTeamInput: UpdateTeamInput!): Team!
+  deleteTeam(deleteTeamInput: IDInput!): String!
 }
 
 input CreateActivityInput {
@@ -125,4 +153,20 @@ input CreateUserInput {
 
 input UpdateUserInput {
   name: String!
+}
+
+input UpdateProfileInput {
+  profile: String!
+}
+
+input CreateTeamInput {
+  name: String!
+  description: String
+  members: [String!]!
+}
+
+input UpdateTeamInput {
+  id: String!
+  name: String!
+  description: String
 }

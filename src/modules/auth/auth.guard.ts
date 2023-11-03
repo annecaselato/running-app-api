@@ -47,7 +47,7 @@ export class AuthGuard implements CanActivate {
         context.getClass()
       ]);
 
-      if (roles.length && !roles.includes(user.profile)) {
+      if (roles?.length && !roles.includes(user.profile)) {
         throw new UnauthorizedException();
       }
 

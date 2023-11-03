@@ -72,7 +72,7 @@ describe('AuthResolver E2E', () => {
     // Arrange
     const passHash = await bcrypt.hash('Pass123!', 10);
     await userRepository.query(
-      'INSERT INTO "user"("id", "name", "email", "password", "createdAt", "updatedAt") VALUES ("userid", "User", "user@email.com", $1, datetime("now"), datetime("now"))',
+      'INSERT INTO "user"("id", "name", "email", "password") VALUES ("userid", "User", "user@email.com", $1)',
       [passHash]
     );
   });
