@@ -50,16 +50,17 @@ export class TestUtils {
   }
 
   private generateAuthToken(userId: string) {
-    const payload = { sub: userId, email: 'user@email.com', name: 'Test User' };
+    const payload = { sub: userId };
     return new JwtService().sign(payload, { secret: 'jwt-secret' });
   }
 
   public async gqlRequest(
     app: INestApplication,
     query: string,
-    variables: any
+    variables: any,
+    userId?: string
   ) {
-    const token = this.generateAuthToken('user-id');
+    const token = this.generateAuthToken(userId || 'user-id');
     return request(app.getHttpServer())
       .post('/graphql')
       .set('Authorization', `Bearer ${token}`)

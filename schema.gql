@@ -12,9 +12,10 @@ type ActivityType {
 type TeamMember {
   id: String!
   email: String!
+  acceptedAt: DateTime
   createdAt: DateTime!
   updatedAt: DateTime!
-  user: User!
+  user: User
   team: Team!
 }
 
@@ -65,6 +66,11 @@ type SignInResponse {
   user: User!
 }
 
+type AthleteTeams {
+  invitations: [TeamMember!]!
+  teams: [TeamMember!]!
+}
+
 type Query {
   getActivity(getActivityInput: IDInput!): Activity!
   listActivities: [Activity!]!
@@ -72,8 +78,9 @@ type Query {
   listTypes: [ActivityType!]!
   me: User!
   checkHealth: String!
-  getTeam(getTeamInput: IDInput!): [Team!]!
+  getTeam(getTeamInput: IDInput!): Team!
   listCoachTeams: [Team!]!
+  listAthleteTeams: AthleteTeams!
 }
 
 input IDInput {
@@ -97,6 +104,9 @@ type Mutation {
   createTeam(createTeamInput: CreateTeamInput!): Team!
   updateTeam(updateTeamInput: UpdateTeamInput!): Team!
   deleteTeam(deleteTeamInput: IDInput!): String!
+  createMembers(createMembersInput: CreateMembersInput!): Team!
+  acceptInvitation(acceptInvitationInput: IDInput!): TeamMember!
+  deleteMember(deleteMemberInput: IDInput!): String!
 }
 
 input CreateActivityInput {
@@ -169,4 +179,9 @@ input UpdateTeamInput {
   id: String!
   name: String!
   description: String
+}
+
+input CreateMembersInput {
+  id: String!
+  members: [String!]!
 }

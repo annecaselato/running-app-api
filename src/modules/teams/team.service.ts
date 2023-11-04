@@ -39,7 +39,9 @@ export class TeamService {
         'coach.name',
         'members.id',
         'members.email',
-        'members.userId'
+        'members.userId',
+        'members.createdAt',
+        'members.acceptedAt'
       ])
       .getOne();
   }

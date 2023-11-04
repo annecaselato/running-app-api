@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import { Team } from './team.entity';
 import { TeamMember } from './team-member.entity';
 
@@ -13,5 +13,35 @@ export class TeamMemberService {
 
   async create(email: string, team: Team): Promise<TeamMember> {
     return await this.repository.save({ email, team });
+  }
+
+  async update(member: TeamMember): Promise<TeamMember> {
+    return this.repository.save(member);
+  }
+
+  async delete(id: string): Promise<DeleteResult> {
+    return this.repository.delete(id);
+  }
+
+  async findById(id: string): Promise<TeamMember | null> {
+    return await this.repository.findOne({
+      where: { id },
+      relations: ['team', 'team.coach']
+    });
+  }
+
+  async listInvitations(email: string): Promise<TeamMember[]> {
+    return await this.repository.find({
+      where: { email, user: null },
+      relations: ['team', 'team.coach']
+    });
+  }
+
+  async listAthleteTeams(userId: string): Promise<TeamMember[]> {
+    return await this.repository
+      .createQueryBuilder('member')
+      .innerJoin('member.user', 'user')
+      .where('user.id= :userId', { userId })
+      .getMany();
   }
 }

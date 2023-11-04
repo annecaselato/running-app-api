@@ -56,7 +56,7 @@ describe('TeamService', () => {
   });
 
   describe('create', () => {
-    it('should call the teamRepository and memberService with correct parameters', async () => {
+    it('should call the teamRepository with correct parameters', async () => {
       // Arrange
       const newTeam = {
         name: 'New Team',

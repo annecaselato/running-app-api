@@ -22,6 +22,10 @@ export class TeamMember extends BaseEntity {
   @Column()
   email: string;
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  acceptedAt: Date;
+
   @Field()
   @CreateDateColumn()
   createdAt: Date;
@@ -30,8 +34,11 @@ export class TeamMember extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Field(() => User)
-  @ManyToOne(() => User, (user) => user.memberships, { onDelete: 'CASCADE' })
+  @Field(() => User, { nullable: true })
+  @ManyToOne(() => User, (user) => user.memberships, {
+    nullable: true,
+    onDelete: 'CASCADE'
+  })
   user?: User;
 
   @Field(() => Team)
