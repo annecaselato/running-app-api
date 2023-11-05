@@ -56,7 +56,7 @@ export class TeamMemberResolver {
     }
 
     return await this.memberService.update(
-      Object.assign(member, { user: authUser, acceptDate: new Date() })
+      Object.assign(member, { user: authUser, acceptedAt: new Date() })
     );
   }
 

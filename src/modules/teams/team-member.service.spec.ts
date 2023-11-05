@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Team } from './team.entity';
 import { TeamMember } from './team-member.entity';
@@ -37,8 +37,10 @@ describe('TeamMemberService', () => {
             findOne: jest.fn().mockResolvedValue(mockTeamMember),
             find: jest.fn().mockResolvedValue([mockTeamMember]),
             createQueryBuilder: jest.fn().mockReturnValue({
-              innerJoin: jest.fn().mockReturnThis(),
+              innerJoinAndSelect: jest.fn().mockReturnThis(),
+              leftJoinAndSelect: jest.fn().mockReturnThis(),
               where: jest.fn().mockReturnThis(),
+              select: jest.fn().mockReturnThis(),
               getMany: jest.fn().mockResolvedValue([])
             })
           }
@@ -111,7 +113,7 @@ describe('TeamMemberService', () => {
 
       // Assert
       expect(repository.find).toHaveBeenCalledWith({
-        where: { email: 'user@email.com', user: null },
+        where: { email: 'user@email.com', acceptedAt: IsNull() },
         relations: ['team', 'team.coach']
       });
     });
