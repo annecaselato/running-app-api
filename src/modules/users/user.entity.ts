@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Activity } from '../activity/activity.entity';
-import { ActivityType } from '../activity/activity-type.entity';
+import { ActivityType } from '../types/activity-type.entity';
 import { Team } from '../teams/team.entity';
 import { TeamMember } from '../teams/team-member.entity';
 

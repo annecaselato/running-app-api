@@ -2,7 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { useContainer } from 'class-validator';
 import { TestUtils } from './test-utils';
-import { ActivityType } from '../src/modules/activity/activity-type.entity';
+import { ActivityType } from '../src/modules/types/activity-type.entity';
 import { CreateActivityInput } from '../src/modules/activity/dto';
 import { Activity } from '../src/modules/activity/activity.entity';
 import { User } from '../src/modules/users/user.entity';

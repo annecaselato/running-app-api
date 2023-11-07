@@ -6,7 +6,6 @@ type ActivityType {
   id: String!
   type: String!
   description: String
-  activities: [Activity!]!
 }
 
 type TeamMember {
@@ -51,18 +50,13 @@ type Activity {
   id: String!
   datetime: DateTime!
   status: String!
+  type: String!
   goalDistance: Float
   distance: Float
   goalDuration: String
   duration: String
   createdAt: DateTime!
   updatedAt: DateTime!
-  user: User!
-  type: ActivityType!
-}
-
-type SignInResponse {
-  access_token: String!
   user: User!
 }
 
@@ -71,16 +65,20 @@ type AthleteTeams {
   teams: [TeamMember!]!
 }
 
+type SignInResponse {
+  access_token: String!
+  user: User!
+}
+
 type Query {
-  getActivity(getActivityInput: IDInput!): Activity!
-  listActivities: [Activity!]!
+  listActivities(listActivitiesInput: MemberIDInput!): [Activity!]!
   getType(getTypeInput: IDInput!): ActivityType!
   listTypes: [ActivityType!]!
-  me: User!
-  checkHealth: String!
   getTeam(getTeamInput: IDInput!): Team!
   listCoachTeams: [Team!]!
   listAthleteTeams: AthleteTeams!
+  me: User!
+  checkHealth: String!
 }
 
 input IDInput {
@@ -94,6 +92,12 @@ type Mutation {
   createType(createTypeInput: CreateTypeInput!): ActivityType!
   updateType(updateTypeInput: UpdateTypeInput!): ActivityType!
   deleteType(deleteTypeInput: IDInput!): String!
+  createTeam(createTeamInput: CreateTeamInput!): Team!
+  updateTeam(updateTeamInput: UpdateTeamInput!): Team!
+  deleteTeam(deleteTeamInput: IDInput!): String!
+  createMembers(createMembersInput: CreateMembersInput!): Team!
+  acceptInvitation(acceptInvitationInput: IDInput!): TeamMember!
+  deleteMember(deleteMemberInput: IDInput!): String!
   signIn(signInInput: SignInInput!): SignInResponse!
   signInOIDC(signInOIDCInput: SignInOIDCInput!): SignInResponse!
   updatePassword(updatePasswordInput: UpdatePasswordInput!): String!
@@ -101,18 +105,12 @@ type Mutation {
   updateUser(updateUserInput: UpdateUserInput!): User!
   updateProfile(updateProfileInput: UpdateProfileInput!): User!
   deleteUser: String!
-  createTeam(createTeamInput: CreateTeamInput!): Team!
-  updateTeam(updateTeamInput: UpdateTeamInput!): Team!
-  deleteTeam(deleteTeamInput: IDInput!): String!
-  createMembers(createMembersInput: CreateMembersInput!): Team!
-  acceptInvitation(acceptInvitationInput: IDInput!): TeamMember!
-  deleteMember(deleteMemberInput: IDInput!): String!
 }
 
 input CreateActivityInput {
   datetime: String!
   status: String!
-  typeId: String!
+  type: String!
   goalDistance: Float
   distance: Float
   goalDuration: String
@@ -123,7 +121,7 @@ input UpdateActivityInput {
   id: String!
   datetime: String!
   status: String!
-  typeId: String!
+  type: String!
   goalDistance: Float
   distance: Float
   goalDuration: String
@@ -139,6 +137,23 @@ input UpdateTypeInput {
   id: String!
   type: String!
   description: String
+}
+
+input CreateTeamInput {
+  name: String!
+  description: String
+  members: [String!]!
+}
+
+input UpdateTeamInput {
+  id: String!
+  name: String!
+  description: String
+}
+
+input CreateMembersInput {
+  id: String!
+  members: [String!]!
 }
 
 input SignInInput {
@@ -167,21 +182,4 @@ input UpdateUserInput {
 
 input UpdateProfileInput {
   profile: String!
-}
-
-input CreateTeamInput {
-  name: String!
-  description: String
-  members: [String!]!
-}
-
-input UpdateTeamInput {
-  id: String!
-  name: String!
-  description: String
-}
-
-input CreateMembersInput {
-  id: String!
-  members: [String!]!
 }

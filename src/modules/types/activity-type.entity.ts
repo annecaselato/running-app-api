@@ -1,12 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn
-} from 'typeorm';
-import { Activity } from './activity.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../users/user.entity';
 
 @Entity()
@@ -26,8 +19,4 @@ export class ActivityType {
 
   @ManyToOne(() => User, (user) => user.types, { onDelete: 'CASCADE' })
   user: User;
-
-  @Field(() => [Activity])
-  @OneToMany(() => Activity, (activity) => activity.type)
-  activities: Activity[];
 }

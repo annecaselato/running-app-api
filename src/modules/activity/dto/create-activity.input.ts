@@ -4,8 +4,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
-  IsString,
-  IsUUID
+  IsString
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -21,10 +20,11 @@ export class CreateActivityInput {
   @Field()
   status: string;
 
-  @IsUUID()
+  @IsString()
   @Transform(({ value }) => value.trim())
+  @IsNotEmpty()
   @Field()
-  typeId: string;
+  type: string;
 
   @IsNumber()
   @IsOptional()

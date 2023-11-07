@@ -8,7 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ExceptionHandler } from '../src/app.exception';
 import { AuthGuard } from '../src/modules/auth/auth.guard';
 import { Activity } from '../src/modules/activity/activity.entity';
-import { ActivityType } from '../src/modules/activity/activity-type.entity';
+import { ActivityType } from '../src/modules/types/activity-type.entity';
 import { Team } from '../src/modules/teams/team.entity';
 import { TeamMember } from '../src/modules/teams/team-member.entity';
 import { User } from '../src/modules/users/user.entity';

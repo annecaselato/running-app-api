@@ -4,7 +4,6 @@ import { DeleteResult, Repository } from 'typeorm';
 import { Activity } from './activity.entity';
 import { User } from '../users/user.entity';
 import { CreateActivityInput } from './dto';
-import { ActivityType } from 'modules/activity/activity-type.entity';
 
 @Injectable()
 export class ActivityService {
@@ -13,15 +12,10 @@ export class ActivityService {
     private readonly activityRepository: Repository<Activity>
   ) {}
 
-  async create(
-    input: CreateActivityInput,
-    user: User,
-    type: ActivityType
-  ): Promise<Activity> {
+  async create(input: CreateActivityInput, user: User): Promise<Activity> {
     const newActivity = this.activityRepository.create({
       ...input,
-      user,
-      type
+      user
     });
     return await this.activityRepository.save(newActivity);
   }
@@ -43,21 +37,10 @@ export class ActivityService {
       .getOne();
   }
 
-  async findByType(typeId: string, userId: string): Promise<Activity[]> {
-    return await this.activityRepository
-      .createQueryBuilder('activity')
-      .innerJoin('activity.user', 'user')
-      .innerJoin('activity.type', 'type')
-      .where('type.id= :typeId', { typeId })
-      .andWhere('user.id= :userId', { userId })
-      .getMany();
-  }
-
   async list(userId: string): Promise<Activity[]> {
     return await this.activityRepository
       .createQueryBuilder('activity')
       .innerJoin('activity.user', 'user')
-      .innerJoinAndSelect('activity.type', 'type')
       .where('user.id = :userId', { userId })
       .getMany();
   }

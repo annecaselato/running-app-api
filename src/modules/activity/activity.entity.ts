@@ -8,7 +8,6 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 import { User } from '../users/user.entity';
-import { ActivityType } from './activity-type.entity';
 
 @Entity()
 @ObjectType()
@@ -24,6 +23,10 @@ export class Activity {
   @Field()
   @Column()
   status: string;
+
+  @Field()
+  @Column()
+  type: string;
 
   @Field({ nullable: true })
   @Column({ nullable: true })
@@ -52,8 +55,4 @@ export class Activity {
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.activities, { onDelete: 'CASCADE' })
   user: User;
-
-  @Field(() => ActivityType)
-  @ManyToOne(() => ActivityType, (type) => type.activities)
-  type: ActivityType;
 }

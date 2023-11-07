@@ -1,8 +1,8 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { useContainer } from 'class-validator';
-import { ActivityType } from '../src/modules/activity/activity-type.entity';
-import { CreateTypeInput } from '../src/modules/activity/dto';
+import { ActivityType } from '../src/modules/types/activity-type.entity';
+import { CreateTypeInput } from '../src/modules/types/dto';
 import { Activity } from '../src/modules/activity/activity.entity';
 import { User } from '../src/modules/users/user.entity';
 import { ActivityModule } from '../src/modules/activity/activity.module';

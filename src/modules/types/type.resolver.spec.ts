@@ -3,16 +3,13 @@ import { BadRequestException } from '@nestjs/common';
 import { ActivityType } from './activity-type.entity';
 import { TypeResolver } from './type.resolver';
 import { TypeService } from './type.service';
-import { ActivityService } from './activity.service';
 import { CreateTypeInput, UpdateTypeInput } from './dto';
 import { User } from '../users/user.entity';
 import { IDInput } from '../../shared/dto/id.input';
-import { Activity } from './activity.entity';
 
 describe('TypeResolver', () => {
   let typeResolver: TypeResolver;
   let typeService: TypeService;
-  let activityService: ActivityService;
 
   const mockUser = {
     id: 'user-id'
@@ -38,17 +35,12 @@ describe('TypeResolver', () => {
             findByType: jest.fn(() => undefined),
             list: jest.fn(() => [mockType])
           })
-        },
-        {
-          provide: ActivityService,
-          useFactory: () => ({ findByType: jest.fn(() => []) })
         }
       ]
     }).compile();
 
     typeResolver = module.get<TypeResolver>(TypeResolver);
     typeService = module.get<TypeService>(TypeService);
-    activityService = module.get<ActivityService>(ActivityService);
   });
 
   describe('createType', () => {
@@ -149,27 +141,6 @@ describe('TypeResolver', () => {
 
       // Assert
       expect(result).toEqual('non-existent-type-id');
-    });
-
-    it('shoud return an exception if type is being used', async () => {
-      // Arrange
-      const input: IDInput = {
-        id: 'type-id'
-      };
-
-      jest
-        .spyOn(activityService, 'findByType')
-        .mockImplementation(() =>
-          Promise.resolve([
-            { datetime: new Date(), status: 'Planned' } as Activity
-          ])
-        );
-
-      // Act
-      const result = await typeResolver.deleteType(input, mockUser);
-
-      // Assert
-      expect(result).toBeInstanceOf(BadRequestException);
     });
   });
 

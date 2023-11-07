@@ -26,9 +26,11 @@ export class UpdateActivityInput {
   @Field()
   status: string;
 
-  @IsUUID()
+  @IsString()
+  @Transform(({ value }) => value.trim())
+  @IsNotEmpty()
   @Field()
-  typeId: string;
+  type: string;
 
   @IsNumber()
   @IsOptional()
