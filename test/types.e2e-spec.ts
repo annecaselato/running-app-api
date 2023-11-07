@@ -3,28 +3,24 @@ import { Repository } from 'typeorm';
 import { useContainer } from 'class-validator';
 import { ActivityType } from '../src/modules/types/activity-type.entity';
 import { CreateTypeInput } from '../src/modules/types/dto';
-import { Activity } from '../src/modules/activity/activity.entity';
 import { User } from '../src/modules/users/user.entity';
-import { ActivityModule } from '../src/modules/activity/activity.module';
-import { UserModule } from '../src/modules/users/user.module';
 import { TestUtils } from './test-utils';
+import { TypeModule, UserModule } from '../src/modules';
 
 describe('TypeResolver E2E', () => {
   let app: INestApplication;
   let typeRepository: Repository<ActivityType>;
   let userRepository: Repository<User>;
-  let activityRepository: Repository<Activity>;
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'jwt-secret';
     const module = await new TestUtils().getModule(
-      [ActivityModule, UserModule],
+      [TypeModule, UserModule],
       []
     );
 
     app = module.createNestApplication();
 
-    activityRepository = module.get('ActivityRepository');
     typeRepository = module.get('ActivityTypeRepository');
     userRepository = module.get('UserRepository');
 
@@ -33,7 +29,7 @@ describe('TypeResolver E2E', () => {
     );
 
     await app.init();
-    useContainer(app.select(ActivityModule), { fallbackOnErrors: true });
+    useContainer(app.select(TypeModule), { fallbackOnErrors: true });
   });
 
   beforeEach(async () => {
@@ -49,10 +45,6 @@ describe('TypeResolver E2E', () => {
     await typeRepository.query(
       'INSERT INTO "activity_type"("id", "type", "description", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e65", "New Run", null, "user-id")'
     );
-
-    await activityRepository.query(
-      'INSERT INTO "activity"("id", "datetime", "status", "typeId", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e12", datetime("now"), "Planned", "1e2e860e-befa-4407-83dd-84fa1d2b1e65", "user-id")'
-    );
   });
 
   afterAll(async () => {
@@ -60,7 +52,6 @@ describe('TypeResolver E2E', () => {
   });
 
   afterEach(async () => {
-    await activityRepository.query('DELETE FROM activity');
     await typeRepository.query('DELETE FROM activity_type');
     await userRepository.query('DELETE FROM user');
   });
@@ -203,21 +194,6 @@ describe('TypeResolver E2E', () => {
       // Assert
       expect(response.status).toEqual(200);
       expect(response.body.errors).toBeFalsy();
-    });
-
-    it('should return an error if the type is being used', async () => {
-      // Arrange
-
-      // Act
-      const response = await new TestUtils().gqlRequest(app, query, {
-        deleteTypeInput: { id: '1e2e860e-befa-4407-83dd-84fa1d2b1e65' }
-      });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual(
-        'Type is being used by activities'
-      );
     });
   });
 

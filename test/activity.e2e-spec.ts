@@ -2,7 +2,6 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { useContainer } from 'class-validator';
 import { TestUtils } from './test-utils';
-import { ActivityType } from '../src/modules/types/activity-type.entity';
 import { CreateActivityInput } from '../src/modules/activity/dto';
 import { Activity } from '../src/modules/activity/activity.entity';
 import { User } from '../src/modules/users/user.entity';
@@ -11,7 +10,6 @@ import { UserModule } from '../src/modules/users/user.module';
 
 describe('ActivityResolver E2E', () => {
   let app: INestApplication;
-  let typeRepository: Repository<ActivityType>;
   let userRepository: Repository<User>;
   let activityRepository: Repository<Activity>;
 
@@ -24,7 +22,6 @@ describe('ActivityResolver E2E', () => {
     app = module.createNestApplication();
 
     activityRepository = module.get('ActivityRepository');
-    typeRepository = module.get('ActivityTypeRepository');
     userRepository = module.get('UserRepository');
 
     app.useGlobalPipes(
@@ -41,12 +38,8 @@ describe('ActivityResolver E2E', () => {
       'INSERT INTO "user"("id", "name", "email", "createdAt", "updatedAt") VALUES ("user-id", "User", "user@email.com", datetime("now"), datetime("now"))'
     );
 
-    await typeRepository.query(
-      'INSERT INTO "activity_type"("id", "type", "description", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e65", "New Run", null, "user-id")'
-    );
-
     await activityRepository.query(
-      'INSERT INTO "activity"("id", "datetime", "status", "typeId", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e12", datetime("now"), "Planned", "1e2e860e-befa-4407-83dd-84fa1d2b1e65", "user-id")'
+      'INSERT INTO "activity"("id", "datetime", "status", "type", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e12", datetime("now"), "Planned", "Long Run", "user-id")'
     );
   });
 
@@ -56,7 +49,6 @@ describe('ActivityResolver E2E', () => {
 
   afterEach(async () => {
     await activityRepository.query('DELETE FROM activity');
-    await typeRepository.query('DELETE FROM activity_type');
     await userRepository.query('DELETE FROM user');
   });
 
@@ -64,7 +56,7 @@ describe('ActivityResolver E2E', () => {
     const createActivityInput: CreateActivityInput = {
       datetime: new Date().toISOString(),
       status: 'Planned',
-      typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e65',
+      type: 'Run',
       goalDistance: 5.0,
       distance: 2.5,
       goalDuration: '00:30:00',
@@ -90,20 +82,6 @@ describe('ActivityResolver E2E', () => {
       expect(response.body.errors).toBeFalsy();
       expect(response.body.data.createActivity).toBeTruthy();
     });
-
-    it('should return an error if the type does not exist', async () => {
-      // Act
-      const response = await new TestUtils().gqlRequest(app, query, {
-        createActivityInput: {
-          ...createActivityInput,
-          typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e60'
-        }
-      });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Type not found');
-    });
   });
 
   describe('updateActivity', () => {
@@ -111,7 +89,7 @@ describe('ActivityResolver E2E', () => {
       id: '1e2e860e-befa-4407-83dd-84fa1d2b1e12',
       datetime: new Date().toISOString(),
       status: 'Completed',
-      typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e65'
+      type: 'Walk'
     };
 
     const query = `
@@ -123,7 +101,7 @@ describe('ActivityResolver E2E', () => {
       }
     `;
 
-    it('should update activity if the activity and type exist', async () => {
+    it('should update activity if the activity exist', async () => {
       // Act
       const response = await new TestUtils().gqlRequest(app, query, {
         updateActivityInput
@@ -147,20 +125,6 @@ describe('ActivityResolver E2E', () => {
       // Assert
       expect(response.status).toEqual(200);
       expect(response.body.errors[0].message).toEqual('Activity not found');
-    });
-
-    it('should return an error if the type does not exist', async () => {
-      // Act
-      const response = await new TestUtils().gqlRequest(app, query, {
-        updateActivityInput: {
-          ...updateActivityInput,
-          typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e60'
-        }
-      });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Type not found');
     });
   });
 
