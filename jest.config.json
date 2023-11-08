@@ -15,7 +15,8 @@
   "coveragePathIgnorePatterns": [
     "src/main.ts",
     ".module.ts",
-    "src/shared/models"
+    "src/shared/models",
+    "src/modules/index.ts"
   ],
   "coverageDirectory": "../coverage",
   "testEnvironment": "node"

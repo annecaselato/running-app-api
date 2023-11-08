@@ -16,6 +16,12 @@ export class UpdateActivityInput {
   @Field()
   id: string;
 
+  @IsUUID()
+  @IsOptional()
+  @Transform(({ value }) => value.trim())
+  @Field({ nullable: true })
+  memberId?: string;
+
   @IsDateString()
   @Field()
   datetime: string;

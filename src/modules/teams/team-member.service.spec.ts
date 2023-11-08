@@ -101,7 +101,7 @@ describe('TeamMemberService', () => {
       // Assert
       expect(repository.findOne).toHaveBeenCalledWith({
         where: { id: 'member-id' },
-        relations: ['team', 'team.coach']
+        relations: ['user', 'team', 'team.coach']
       });
     });
   });

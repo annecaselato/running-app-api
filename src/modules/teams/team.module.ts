@@ -10,6 +10,7 @@ import { TeamMemberService } from './team-member.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Team, TeamMember, User])],
-  providers: [TeamResolver, TeamMemberResolver, TeamService, TeamMemberService]
+  providers: [TeamResolver, TeamMemberResolver, TeamService, TeamMemberService],
+  exports: [TeamMemberService]
 })
 export class TeamModule {}

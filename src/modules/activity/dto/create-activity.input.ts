@@ -4,12 +4,19 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
-  IsString
+  IsString,
+  IsUUID
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 @InputType()
 export class CreateActivityInput {
+  @IsUUID()
+  @IsOptional()
+  @Transform(({ value }) => value.trim())
+  @Field({ nullable: true })
+  memberId?: string;
+
   @IsDateString()
   @Field()
   datetime: string;

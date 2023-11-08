@@ -30,6 +30,7 @@ export class TeamService {
     return await this.repository
       .createQueryBuilder('team')
       .leftJoinAndSelect('team.members', 'members')
+      .leftJoinAndSelect('members.user', 'user')
       .innerJoinAndSelect('team.coach', 'coach')
       .where({ id })
       .andWhere('coach.id= :coachId', { coachId })
@@ -41,7 +42,9 @@ export class TeamService {
         'members.email',
         'members.userId',
         'members.createdAt',
-        'members.acceptedAt'
+        'members.acceptedAt',
+        'user.id',
+        'user.name'
       ])
       .getOne();
   }

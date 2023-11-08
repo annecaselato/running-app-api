@@ -2,21 +2,44 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { BadRequestException } from '@nestjs/common';
 import { Activity } from './activity.entity';
 import { User } from '../users/user.entity';
-import { CreateActivityInput, UpdateActivityInput } from './dto';
+import {
+  CreateActivityInput,
+  DeleteActivityInput,
+  MemberIDInput,
+  UpdateActivityInput
+} from './dto';
 import { ActivityService } from './activity.service';
+import { TeamMemberService } from '../teams/team-member.service';
 import { AuthUser } from '../../shared/decorators';
-import { IDInput } from 'shared/dto/id.input';
 
 @Resolver(() => Activity)
 export class ActivityResolver {
-  constructor(private readonly activityService: ActivityService) {}
+  constructor(
+    private readonly activityService: ActivityService,
+    private readonly memberService: TeamMemberService
+  ) {}
 
   @Mutation(() => Activity)
   async createActivity(
     @Args('createActivityInput') input: CreateActivityInput,
     @AuthUser() authUser: User
   ) {
-    return await this.activityService.create(input, authUser);
+    let user: User;
+
+    if (input.memberId) {
+      const member = await this.memberService.findById(input.memberId);
+
+      if (!member || member.team.coach.id !== authUser.id) {
+        return new BadRequestException('Team member not found');
+      }
+
+      user = member.user;
+      delete input.memberId;
+    } else {
+      user = authUser;
+    }
+
+    return await this.activityService.create(input, user);
   }
 
   @Mutation(() => Activity)
@@ -24,7 +47,23 @@ export class ActivityResolver {
     @Args('updateActivityInput') input: UpdateActivityInput,
     @AuthUser() authUser: User
   ) {
-    const activity = await this.activityService.findById(input.id, authUser.id);
+    const { id, memberId } = input;
+    let userId: string;
+
+    if (memberId) {
+      const member = await this.memberService.findById(memberId);
+
+      if (!member || member.team.coach.id !== authUser.id) {
+        return new BadRequestException('Team member not found');
+      }
+
+      userId = member.user.id;
+    } else {
+      userId = authUser.id;
+    }
+
+    const activity = await this.activityService.findById(id, userId);
+
     if (!activity) return new BadRequestException('Activity not found');
 
     return await this.activityService.update(Object.assign(activity, input));
@@ -32,10 +71,25 @@ export class ActivityResolver {
 
   @Mutation(() => String)
   async deleteActivity(
-    @Args('deleteActivityInput') input: IDInput,
+    @Args('deleteActivityInput') input: DeleteActivityInput,
     @AuthUser() authUser: User
   ) {
-    const activity = await this.activityService.findById(input.id, authUser.id);
+    const { id, memberId } = input;
+    let userId: string;
+
+    if (memberId) {
+      const member = await this.memberService.findById(memberId);
+
+      if (!member || member.team.coach.id !== authUser.id) {
+        return new BadRequestException('Team member not found');
+      }
+
+      userId = member.user.id;
+    } else {
+      userId = authUser.id;
+    }
+
+    const activity = await this.activityService.findById(id, userId);
 
     if (activity) {
       await this.activityService.delete(input.id);
@@ -45,7 +99,24 @@ export class ActivityResolver {
   }
 
   @Query(() => [Activity])
-  async listActivities(@AuthUser() authUser: User) {
-    return await this.activityService.list(authUser.id);
+  async listActivities(
+    @Args('listActivitiesInput') input: MemberIDInput,
+    @AuthUser() authUser: User
+  ) {
+    let user: User;
+
+    if (input.memberId) {
+      const member = await this.memberService.findById(input.memberId);
+
+      if (!member || member.team.coach.id !== authUser.id) {
+        return new BadRequestException('Team member not found');
+      }
+
+      user = member.user;
+    } else {
+      user = authUser;
+    }
+
+    return { rows: await this.activityService.list(user.id), user: user.name };
   }
 }

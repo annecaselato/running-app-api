@@ -26,7 +26,7 @@ export class TeamMemberService {
   async findById(id: string): Promise<TeamMember | null> {
     return await this.repository.findOne({
       where: { id },
-      relations: ['team', 'team.coach']
+      relations: ['user', 'team', 'team.coach']
     });
   }
 

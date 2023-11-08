@@ -4,6 +4,7 @@ import { Activity } from './activity.entity';
 import { User } from '../users/user.entity';
 import { ActivityResolver } from './activity.resolver';
 import { ActivityService } from './activity.service';
+import { TeamMemberService } from '../teams/team-member.service';
 import { CreateActivityInput, UpdateActivityInput } from './dto';
 
 describe('ActivityResolver', () => {
@@ -11,7 +12,8 @@ describe('ActivityResolver', () => {
   let activityService: ActivityService;
 
   const mockUser = {
-    id: 'user-id'
+    id: 'user-id',
+    name: 'Test User'
   } as User;
 
   const mockActivity = {
@@ -23,6 +25,23 @@ describe('ActivityResolver', () => {
     goalDuration: '00:30:00',
     duration: '00:20:00'
   } as Activity;
+
+  const mockCoach = {
+    id: 'coach-id',
+    name: 'Test Coach'
+  } as User;
+
+  const mockMember = {
+    id: 'member-id',
+    user: {
+      id: 'member-user-id',
+      name: 'Test Member'
+    },
+    team: {
+      id: 'team-id',
+      coach: mockCoach
+    }
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -36,6 +55,12 @@ describe('ActivityResolver', () => {
             delete: jest.fn(),
             findById: jest.fn(() => mockActivity),
             list: jest.fn(() => [mockActivity])
+          })
+        },
+        {
+          provide: TeamMemberService,
+          useFactory: () => ({
+            findById: jest.fn(() => mockMember)
           })
         }
       ]
@@ -63,6 +88,31 @@ describe('ActivityResolver', () => {
       // Assert
       expect(result).toEqual({ id: 'new-activity-id', ...input });
     });
+
+    it('should allow coach to create an activity', async () => {
+      // Act
+      const result = await activityResolver.createActivity(
+        { ...input, memberId: 'member-id' },
+        mockCoach
+      );
+
+      // Assert
+      expect(result).toEqual({
+        id: 'new-activity-id',
+        ...input
+      });
+    });
+
+    it('should throw if coach is invalid', async () => {
+      // Act
+      const result = await activityResolver.createActivity(
+        { ...input, memberId: 'member-id' },
+        { id: 'other' } as User
+      );
+
+      // Assert
+      expect(result).toBeInstanceOf(BadRequestException);
+    });
   });
 
   describe('updateActivity', () => {
@@ -78,7 +128,10 @@ describe('ActivityResolver', () => {
       const result = await activityResolver.updateActivity(input, mockUser);
 
       // Assert
-      expect(result).toEqual({ ...mockActivity, ...input });
+      expect(result).toEqual({
+        ...mockActivity,
+        ...input
+      });
     });
 
     it('should return an exception if activity is not found', async () => {
@@ -89,6 +142,28 @@ describe('ActivityResolver', () => {
 
       // Act
       const result = await activityResolver.updateActivity(input, mockUser);
+
+      // Assert
+      expect(result).toBeInstanceOf(BadRequestException);
+    });
+
+    it('should allow coach to update an activity', async () => {
+      // Act
+      const result = await activityResolver.updateActivity(
+        { ...input, memberId: 'member-id' },
+        mockCoach
+      );
+
+      // Assert
+      expect(result).toEqual({ ...mockActivity, ...input });
+    });
+
+    it('should throw if coach is invalid', async () => {
+      // Act
+      const result = await activityResolver.updateActivity(
+        { ...input, memberId: 'member-id' },
+        { id: 'other' } as User
+      );
 
       // Assert
       expect(result).toBeInstanceOf(BadRequestException);
@@ -122,15 +197,59 @@ describe('ActivityResolver', () => {
       // Assert
       expect(result).toEqual('non-existent-id');
     });
+
+    it('should allow coach to delete an activity', async () => {
+      // Act
+      const result = await activityResolver.deleteActivity(
+        { id: 'activity-id', memberId: 'member-id' },
+        mockCoach
+      );
+
+      // Assert
+      expect(result).toEqual('activity-id');
+    });
+
+    it('should throw if coach is invalid', async () => {
+      // Act
+      const result = await activityResolver.deleteActivity(
+        { id: 'activity-id', memberId: 'member-id' },
+        { id: 'other' } as User
+      );
+
+      // Assert
+      expect(result).toBeInstanceOf(BadRequestException);
+    });
   });
 
   describe('listActivities', () => {
     it('should return a list of activities', async () => {
       // Act
-      const result = await activityResolver.listActivities(mockUser);
+      const result = await activityResolver.listActivities({}, mockUser);
 
       // Assert
-      expect(result).toEqual([mockActivity]);
+      expect(result).toEqual({ rows: [mockActivity], user: 'Test User' });
+    });
+
+    it('should return a list of member activities', async () => {
+      // Act
+      const result = await activityResolver.listActivities(
+        { memberId: 'member-id' },
+        mockCoach
+      );
+
+      // Assert
+      expect(result).toEqual({ rows: [mockActivity], user: 'Test Member' });
+    });
+
+    it('should throw if coach is invalid', async () => {
+      // Act
+      const result = await activityResolver.listActivities(
+        { memberId: 'member-id' },
+        { id: 'other' } as User
+      );
+
+      // Assert
+      expect(result).toBeInstanceOf(BadRequestException);
     });
   });
 });
