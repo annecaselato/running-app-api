@@ -6,7 +6,8 @@ import {
   CreateActivityInput,
   DeleteActivityInput,
   MemberIDInput,
-  UpdateActivityInput
+  UpdateActivityInput,
+  UserActivity
 } from './dto';
 import { ActivityService } from './activity.service';
 import { TeamMemberService } from '../teams/team-member.service';
@@ -98,7 +99,7 @@ export class ActivityResolver {
     return input.id;
   }
 
-  @Query(() => [Activity])
+  @Query(() => UserActivity)
   async listActivities(
     @Args('listActivitiesInput') input: MemberIDInput,
     @AuthUser() authUser: User
