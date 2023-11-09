@@ -6,11 +6,13 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import { createMock } from '@golevelup/ts-jest';
 import { AuthGuard } from './auth.guard';
 import { UserService } from '../users/user.service';
+import { IS_PUBLIC_KEY } from '../../shared/decorators';
 
 describe('TokenAuthGuard', () => {
   let authGuard: AuthGuard;
   let reflector: Reflector;
   let jwtService: JwtService;
+  let userService: UserService;
 
   const context = createMock<ExecutionContext>();
 
@@ -21,7 +23,7 @@ describe('TokenAuthGuard', () => {
         .mockReturnValue({ req: { headers: { ...headers } } })
     } as unknown as GqlExecutionContext);
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthGuard,
@@ -29,7 +31,7 @@ describe('TokenAuthGuard', () => {
         {
           provide: UserService,
           useValue: {
-            findOneById: jest.fn(() => Promise.resolve({ id: 'user-id' }))
+            findOneById: jest.fn()
           }
         }
       ]
@@ -39,6 +41,18 @@ describe('TokenAuthGuard', () => {
     authGuard = module.get<AuthGuard>(AuthGuard);
     reflector = module.get<Reflector>(Reflector);
     jwtService = module.get<JwtService>(JwtService);
+    userService = module.get<UserService>(UserService);
+  });
+
+  beforeEach(() => {
+    reflector.getAllAndOverride = jest.fn().mockReturnValue(false);
+    jwtService.verify = jest.fn().mockReturnValue({ sub: 'user-id' });
+    userService.findOneById = jest
+      .fn()
+      .mockReturnValue({ id: 'user-id', profile: 'Athlete' });
+    GqlExecutionContext.create = createGqlContext({
+      authorization: 'Bearer valid-token'
+    });
   });
 
   it('should be defined', () => {
@@ -54,9 +68,13 @@ describe('TokenAuthGuard', () => {
       expect(await authGuard.canActivate(context)).toBe(true);
     });
 
+    it('should return true if authorized', async () => {
+      // Act & Assert
+      expect(await authGuard.canActivate(context)).toEqual(true);
+    });
+
     it('should throw an UnauthorizedException if no token is provided', () => {
       // Arrange
-      reflector.getAllAndOverride = jest.fn().mockReturnValue(false);
       GqlExecutionContext.create = createGqlContext();
 
       // Act & Assert
@@ -67,10 +85,7 @@ describe('TokenAuthGuard', () => {
 
     it('should throw an UnauthorizedException if the token is invalid', () => {
       // Arrange
-      const token = 'Bearer invalid-token';
-      reflector.getAllAndOverride = jest.fn().mockReturnValue(false);
-      GqlExecutionContext.create = createGqlContext({ authorization: token });
-      jwtService.verify = jest.fn(() => {
+      jwtService.verify = jest.fn().mockImplementation(() => {
         throw new Error();
       });
 
@@ -80,15 +95,27 @@ describe('TokenAuthGuard', () => {
       );
     });
 
-    it('should return true if authorized', async () => {
+    it('should throw an UnauthorizedException if the user is not found', () => {
       // Arrange
-      const token = 'Bearer valid-token';
-      reflector.getAllAndOverride = jest.fn().mockReturnValue(false);
-      GqlExecutionContext.create = createGqlContext({ authorization: token });
-      jwtService.verify = jest.fn().mockReturnValue({ sub: 'user-id' });
+      userService.findOneById = jest.fn().mockReturnValue(undefined);
 
       // Act & Assert
-      expect(await authGuard.canActivate(context)).toBe(true);
+      expect(() => authGuard.canActivate(context)).rejects.toBeInstanceOf(
+        UnauthorizedException
+      );
+    });
+
+    it('should return an UnauthorizedException if the user role is invalid', async () => {
+      // Arrange
+      reflector.getAllAndOverride = jest.fn().mockImplementation((key) => {
+        if (key === IS_PUBLIC_KEY) return false;
+        if (key === 'roles') return ['Coach'];
+      });
+
+      // Act & Assert
+      expect(() => authGuard.canActivate(context)).rejects.toBeInstanceOf(
+        UnauthorizedException
+      );
     });
   });
 });

@@ -16,6 +16,12 @@ export class UpdateActivityInput {
   @Field()
   id: string;
 
+  @IsUUID()
+  @IsOptional()
+  @Transform(({ value }) => value.trim())
+  @Field({ nullable: true })
+  memberId?: string;
+
   @IsDateString()
   @Field()
   datetime: string;
@@ -26,9 +32,11 @@ export class UpdateActivityInput {
   @Field()
   status: string;
 
-  @IsUUID()
+  @IsString()
+  @Transform(({ value }) => value.trim())
+  @IsNotEmpty()
   @Field()
-  typeId: string;
+  type: string;
 
   @IsNumber()
   @IsOptional()

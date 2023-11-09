@@ -29,6 +29,7 @@ describe('UserResolver', () => {
               password
             })),
             update: jest.fn(() => authUser),
+            updateProfile: jest.fn((id, profile) => ({ id, profile })),
             delete: jest.fn(() => ({})),
             findOneById: jest.fn(() => authUser)
           })
@@ -81,6 +82,19 @@ describe('UserResolver', () => {
       // Assert
       expect(result).toEqual({ ...authUser, ...updateUserInput });
       expect(updateSpy).toHaveBeenCalledWith(authUser.id, updateUserInput);
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should update the authenticated users profile', async () => {
+      // Arrange
+      const updateProfileInput = { profile: 'Coach' };
+
+      // Act
+      const result = await resolver.updateProfile(updateProfileInput, authUser);
+
+      // Assert
+      expect(result).toEqual({ ...authUser, ...updateProfileInput });
     });
   });
 

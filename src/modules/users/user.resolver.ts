@@ -1,7 +1,7 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { User } from './user.entity';
 import { UserService } from './user.service';
-import { CreateUserInput, UpdateUserInput } from './dto';
+import { CreateUserInput, UpdateProfileInput, UpdateUserInput } from './dto';
 import { AuthUser, PublicRoute } from '../../shared/decorators';
 
 @Resolver(() => User)
@@ -10,17 +10,30 @@ export class UserResolver {
 
   @PublicRoute()
   @Mutation(() => User)
-  createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
-    const { name, email, password } = createUserInput;
-    return this.userService.create(name, email, password);
+  async createUser(@Args('createUserInput') input: CreateUserInput) {
+    const { name, email, password } = input;
+    return await this.userService.create(name, email, password);
   }
 
   @Mutation(() => User)
   async updateUser(
-    @Args('updateUserInput') updateUserInput: UpdateUserInput,
+    @Args('updateUserInput') input: UpdateUserInput,
     @AuthUser() authUser: User
   ) {
-    return await this.userService.update(authUser.id, updateUserInput);
+    return await this.userService.update(authUser.id, input);
+  }
+
+  @Mutation(() => User)
+  async updateProfile(
+    @Args('updateProfileInput') input: UpdateProfileInput,
+    @AuthUser() authUser: User
+  ) {
+    const user = await this.userService.updateProfile(
+      authUser.id,
+      input.profile
+    );
+
+    return Object.assign(authUser, user);
   }
 
   @Mutation(() => String)

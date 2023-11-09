@@ -1,84 +1,39 @@
-import { Test, TestingModule } from '@nestjs/testing';
+// Libraries
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ApolloDriver } from '@nestjs/apollo';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { APP_GUARD } from '@nestjs/core';
 import { Repository } from 'typeorm';
-import * as request from 'supertest';
 import { useContainer } from 'class-validator';
-import { ActivityType } from '../src/modules/activity/activity-type.entity';
-import { AuthGuard } from '../src/modules/auth/auth.guard';
-import { ExceptionHandler } from '../src/app.exception';
-import { CreateActivityInput } from '../src/modules/activity/dto';
-import { Activity } from '../src/modules/activity/activity.entity';
-import { User } from '../src/modules/users/user.entity';
+import { TestUtils } from './test-utils';
+// Modules
 import { ActivityModule } from '../src/modules/activity/activity.module';
+import { TeamModule } from '../src/modules/teams/team.module';
 import { UserModule } from '../src/modules/users/user.module';
+// Entities
+import { Activity } from '../src/modules/activity/activity.entity';
+import { Team } from '../src/modules/teams/team.entity';
+import { TeamMember } from '../src/modules/teams/team-member.entity';
+import { User } from '../src/modules/users/user.entity';
+// DTOs
+import { CreateActivityInput } from '../src/modules/activity/dto';
 
 describe('ActivityResolver E2E', () => {
   let app: INestApplication;
-  let typeRepository: Repository<ActivityType>;
   let userRepository: Repository<User>;
   let activityRepository: Repository<Activity>;
-
-  const generateAuthToken = (userId: string) => {
-    const payload = { sub: userId, email: 'user@email.com', name: 'Test User' };
-    return new JwtService().sign(payload, { secret: 'jwt-secret' });
-  };
-
-  const gqlRequestWithAuth = async (query: string, variables: any) => {
-    const token = generateAuthToken('user-id');
-    return request(app.getHttpServer())
-      .post('/graphql')
-      .set('Authorization', `Bearer ${token}`)
-      .send({
-        query,
-        variables
-      });
-  };
+  let teamRepository: Repository<Team>;
+  let memberRepository: Repository<TeamMember>;
 
   beforeAll(async () => {
-    process.env.JWT_SECRET = 'jwt-secret';
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        ActivityModule,
-        UserModule,
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [ActivityType, Activity, User],
-          logging: true,
-          synchronize: true
-        }),
-        GraphQLModule.forRoot({
-          driver: ApolloDriver,
-          autoSchemaFile: true,
-          formatError: ExceptionHandler.formatApolloError
-        }),
-        JwtModule.register({
-          global: true,
-          secret: process.env.JWT_SECRET,
-          signOptions: { expiresIn: '500s' }
-        })
-      ],
-      providers: [
-        {
-          provide: APP_GUARD,
-          useClass: AuthGuard
-        }
-      ]
-    }).compile();
+    const module = await new TestUtils().getModule(
+      [ActivityModule, UserModule, TeamModule],
+      []
+    );
 
     app = module.createNestApplication();
 
-    typeRepository = module.get<Repository<ActivityType>>(
-      'ActivityTypeRepository'
-    );
-    userRepository = module.get<Repository<User>>('UserRepository');
-
-    activityRepository = module.get<Repository<Activity>>('ActivityRepository');
+    activityRepository = module.get('ActivityRepository');
+    userRepository = module.get('UserRepository');
+    teamRepository = module.get('TeamRepository');
+    memberRepository = module.get('TeamMemberRepository');
 
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true })
@@ -91,15 +46,27 @@ describe('ActivityResolver E2E', () => {
   beforeEach(async () => {
     // Arrange
     await userRepository.query(
-      'INSERT INTO "user"("id", "name", "email", "createdAt", "updatedAt") VALUES ("user-id", "User", "user@email.com", datetime("now"), datetime("now"))'
+      'INSERT INTO "user"("id", "name", "email", "profile") VALUES ("user-id", "User", "user@email.com", "Athlete")'
     );
 
-    await typeRepository.query(
-      'INSERT INTO "activity_type"("id", "type", "description", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e65", "New Run", null, "user-id")'
+    await userRepository.query(
+      'INSERT INTO "user"("id", "name", "email", "profile") VALUES ("coach-id", "Coach", "coach@email.com", "Coach")'
+    );
+
+    await userRepository.query(
+      'INSERT INTO "user"("id", "name", "email", "profile") VALUES ("other-id", "Coach", "other@email.com", "Coach")'
     );
 
     await activityRepository.query(
-      'INSERT INTO "activity"("id", "datetime", "status", "typeId", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e12", datetime("now"), "Planned", "1e2e860e-befa-4407-83dd-84fa1d2b1e65", "user-id")'
+      'INSERT INTO "activity"("id", "datetime", "status", "type", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e12", datetime("now"), "Planned", "Long Run", "user-id")'
+    );
+
+    await teamRepository.query(
+      'INSERT INTO "team"("id", "name", "coachId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e31", "Test team", "coach-id")'
+    );
+
+    await memberRepository.query(
+      'INSERT INTO "team_member"("id", "email", "teamId", "userId") VALUES ("1e2e860e-befa-4407-83dd-84fa1d2b1e21", "member1@example.com", "1e2e860e-befa-4407-83dd-84fa1d2b1e31", "user-id")'
     );
   });
 
@@ -109,7 +76,8 @@ describe('ActivityResolver E2E', () => {
 
   afterEach(async () => {
     await activityRepository.query('DELETE FROM activity');
-    await typeRepository.query('DELETE FROM activity_type');
+    await memberRepository.query('DELETE FROM team_member');
+    await teamRepository.query('DELETE FROM team');
     await userRepository.query('DELETE FROM user');
   });
 
@@ -117,7 +85,7 @@ describe('ActivityResolver E2E', () => {
     const createActivityInput: CreateActivityInput = {
       datetime: new Date().toISOString(),
       status: 'Planned',
-      typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e65',
+      type: 'Run',
       goalDistance: 5.0,
       distance: 2.5,
       goalDuration: '00:30:00',
@@ -134,7 +102,9 @@ describe('ActivityResolver E2E', () => {
 
     it('should create activity if all parameters are valid', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { createActivityInput });
+      const response = await new TestUtils().gqlRequest(app, query, {
+        createActivityInput
+      });
 
       // Assert
       expect(response.status).toEqual(200);
@@ -142,18 +112,44 @@ describe('ActivityResolver E2E', () => {
       expect(response.body.data.createActivity).toBeTruthy();
     });
 
-    it('should return an error if the type does not exist', async () => {
+    it('should create activity if user is team members coach', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, {
-        createActivityInput: {
-          ...createActivityInput,
-          typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e60'
-        }
-      });
+      const response = await new TestUtils().gqlRequest(
+        app,
+        query,
+        {
+          createActivityInput: {
+            ...createActivityInput,
+            memberId: '1e2e860e-befa-4407-83dd-84fa1d2b1e21'
+          }
+        },
+        'coach-id'
+      );
 
       // Assert
       expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Type not found');
+      expect(response.body.errors).toBeFalsy();
+      expect(response.body.data.createActivity).toBeTruthy();
+    });
+
+    it('should return error if user is not members team coach', async () => {
+      // Act
+      const response = await new TestUtils().gqlRequest(
+        app,
+        query,
+        {
+          createActivityInput: {
+            ...createActivityInput,
+            memberId: '1e2e860e-befa-4407-83dd-84fa1d2b1e21'
+          }
+        },
+        'other-id'
+      );
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeTruthy();
+      expect(response.body.data).toBeFalsy();
     });
   });
 
@@ -162,7 +158,7 @@ describe('ActivityResolver E2E', () => {
       id: '1e2e860e-befa-4407-83dd-84fa1d2b1e12',
       datetime: new Date().toISOString(),
       status: 'Completed',
-      typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e65'
+      type: 'Walk'
     };
 
     const query = `
@@ -174,9 +170,11 @@ describe('ActivityResolver E2E', () => {
       }
     `;
 
-    it('should update activity if the activity and type exist', async () => {
+    it('should update activity if the activity exist', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { updateActivityInput });
+      const response = await new TestUtils().gqlRequest(app, query, {
+        updateActivityInput
+      });
 
       // Assert
       expect(response.status).toEqual(200);
@@ -184,9 +182,29 @@ describe('ActivityResolver E2E', () => {
       expect(response.body.data.updateActivity.status).toBe('Completed');
     });
 
+    it('should update activity if user is team members coach', async () => {
+      // Act
+      const response = await new TestUtils().gqlRequest(
+        app,
+        query,
+        {
+          updateActivityInput: {
+            ...updateActivityInput,
+            memberId: '1e2e860e-befa-4407-83dd-84fa1d2b1e21'
+          }
+        },
+        'coach-id'
+      );
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeFalsy();
+      expect(response.body.data.updateActivity).toBeTruthy();
+    });
+
     it('should return an error if the activity does not exist', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, {
+      const response = await new TestUtils().gqlRequest(app, query, {
         updateActivityInput: {
           ...updateActivityInput,
           id: '1e2e860e-befa-4407-83dd-84fa1d2b1e11'
@@ -198,18 +216,24 @@ describe('ActivityResolver E2E', () => {
       expect(response.body.errors[0].message).toEqual('Activity not found');
     });
 
-    it('should return an error if the type does not exist', async () => {
+    it('should return error if user is not members team coach', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, {
-        updateActivityInput: {
-          ...updateActivityInput,
-          typeId: '1e2e860e-befa-4407-83dd-84fa1d2b1e60'
-        }
-      });
+      const response = await new TestUtils().gqlRequest(
+        app,
+        query,
+        {
+          updateActivityInput: {
+            ...updateActivityInput,
+            memberId: '1e2e860e-befa-4407-83dd-84fa1d2b1e21'
+          }
+        },
+        'other-id'
+      );
 
       // Assert
       expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Type not found');
+      expect(response.body.errors).toBeTruthy();
+      expect(response.body.data).toBeFalsy();
     });
   });
 
@@ -219,14 +243,38 @@ describe('ActivityResolver E2E', () => {
     };
 
     const query = `
-      mutation ($deleteActivityInput: IDInput!) {
+      mutation ($deleteActivityInput: DeleteActivityInput!) {
         deleteActivity(deleteActivityInput: $deleteActivityInput)
       }
     `;
 
     it('should delete activity if it exists', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { deleteActivityInput });
+      const response = await new TestUtils().gqlRequest(app, query, {
+        deleteActivityInput
+      });
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeFalsy();
+      expect(response.body.data.deleteActivity).toEqual(
+        '1e2e860e-befa-4407-83dd-84fa1d2b1e12'
+      );
+    });
+
+    it('should delete activity if user is team members coach', async () => {
+      // Act
+      const response = await new TestUtils().gqlRequest(
+        app,
+        query,
+        {
+          deleteActivityInput: {
+            ...deleteActivityInput,
+            memberId: '1e2e860e-befa-4407-83dd-84fa1d2b1e21'
+          }
+        },
+        'coach-id'
+      );
 
       // Assert
       expect(response.status).toEqual(200);
@@ -238,7 +286,7 @@ describe('ActivityResolver E2E', () => {
 
     it('should not return an error if the activity does not exist', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, {
+      const response = await new TestUtils().gqlRequest(app, query, {
         deleteActivityInput: { id: '1e2e860e-befa-4407-83dd-84fa1d2b1e11' }
       });
 
@@ -246,72 +294,92 @@ describe('ActivityResolver E2E', () => {
       expect(response.status).toEqual(200);
       expect(response.body.errors).toBeFalsy();
     });
-  });
 
-  describe('getActivity', () => {
-    const getActivityInput = {
-      id: '1e2e860e-befa-4407-83dd-84fa1d2b1e12'
-    };
-
-    const query = `
-      query ($getActivityInput: IDInput!) {
-        getActivity(getActivityInput: $getActivityInput) {
-          id
-          status
-        }
-      }
-    `;
-
-    it('should retrieve activity if it exists', async () => {
+    it('should return error if user is not members team coach', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, { getActivityInput });
+      const response = await new TestUtils().gqlRequest(
+        app,
+        query,
+        {
+          deleteActivityInput: {
+            ...deleteActivityInput,
+            memberId: '1e2e860e-befa-4407-83dd-84fa1d2b1e21'
+          }
+        },
+        'other-id'
+      );
 
       // Assert
       expect(response.status).toEqual(200);
-      expect(response.body.errors).toBeFalsy();
-      expect(response.body.data.getActivity.status).toBe('Planned');
-    });
-
-    it('should return an error if the activity id is invalid', async () => {
-      // Act
-      const response = await gqlRequestWithAuth(query, {
-        getActivityInput: { id: 'invalid' }
-      });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('id must be a UUID');
-    });
-
-    it('should return an error if the activity does not exist', async () => {
-      // Act
-      const response = await gqlRequestWithAuth(query, {
-        getActivityInput: { id: '1e2e860e-befa-4407-83dd-84fa1d2b1e11' }
-      });
-
-      // Assert
-      expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Activity not found');
+      expect(response.body.errors).toBeTruthy();
+      expect(response.body.data).toBeFalsy();
     });
   });
 
   describe('listActivities', () => {
+    const listActivitiesInput = {};
+
     const query = `
-      query {
-        listActivities {
-          id
+      query ($listActivitiesInput: MemberIDInput!) {
+        listActivities(listActivitiesInput: $listActivitiesInput) {
+          rows {
+            id
+          }
+          user
         }
       }
     `;
 
     it('should retrieve a list of activities', async () => {
       // Act
-      const response = await gqlRequestWithAuth(query, {});
+      const response = await new TestUtils().gqlRequest(app, query, {
+        listActivitiesInput
+      });
 
       // Assert
       expect(response.status).toEqual(200);
       expect(response.body.errors).toBeFalsy();
-      expect(response.body.data.listActivities.length).toBeGreaterThan(0);
+      expect(response.body.data.listActivities.rows.length).toBeGreaterThan(0);
+    });
+
+    it('should list activities if user is team members coach', async () => {
+      // Act
+      const response = await new TestUtils().gqlRequest(
+        app,
+        query,
+        {
+          listActivitiesInput: {
+            ...listActivitiesInput,
+            memberId: '1e2e860e-befa-4407-83dd-84fa1d2b1e21'
+          }
+        },
+        'coach-id'
+      );
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeFalsy();
+      expect(response.body.data.listActivities.rows.length).toBeGreaterThan(0);
+    });
+
+    it('should return error if user is not members team coach', async () => {
+      // Act
+      const response = await new TestUtils().gqlRequest(
+        app,
+        query,
+        {
+          listActivitiesInput: {
+            ...listActivitiesInput,
+            memberId: '1e2e860e-befa-4407-83dd-84fa1d2b1e21'
+          }
+        },
+        'other-id'
+      );
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeTruthy();
+      expect(response.body.data).toBeFalsy();
     });
   });
 });

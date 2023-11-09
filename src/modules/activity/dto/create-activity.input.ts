@@ -11,6 +11,12 @@ import { Transform } from 'class-transformer';
 
 @InputType()
 export class CreateActivityInput {
+  @IsUUID()
+  @IsOptional()
+  @Transform(({ value }) => value.trim())
+  @Field({ nullable: true })
+  memberId?: string;
+
   @IsDateString()
   @Field()
   datetime: string;
@@ -21,10 +27,11 @@ export class CreateActivityInput {
   @Field()
   status: string;
 
-  @IsUUID()
+  @IsString()
   @Transform(({ value }) => value.trim())
+  @IsNotEmpty()
   @Field()
-  typeId: string;
+  type: string;
 
   @IsNumber()
   @IsOptional()

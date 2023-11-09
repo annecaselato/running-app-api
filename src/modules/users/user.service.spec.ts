@@ -101,6 +101,20 @@ describe('UserService', () => {
     });
   });
 
+  describe('updateProfile', () => {
+    it('should call userRepository.save with correct parameters', async () => {
+      // Arrange
+      const userId = 'user-id';
+      const profile = 'Athlete';
+
+      // Act
+      await userService.updateProfile(userId, profile);
+
+      // Assert
+      expect(userRepository.save).toHaveBeenCalledWith({ id: userId, profile });
+    });
+  });
+
   describe('delete', () => {
     it('should call userRepository.delete with correct parameters', async () => {
       // Arrange

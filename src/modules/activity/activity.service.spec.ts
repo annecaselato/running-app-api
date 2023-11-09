@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { Activity } from './activity.entity';
 import { User } from '../users/user.entity';
 import { ActivityService } from './activity.service';
-import { ActivityType } from './activity-type.entity';
 
 describe('ActivityService', () => {
   let activityService: ActivityService;
@@ -53,26 +52,19 @@ describe('ActivityService', () => {
 
   describe('create', () => {
     it('should call activityRepository.create with correct parameters', async () => {
-      // Arrange
-      const type = {
-        id: 'type-id',
-        type: 'Run'
-      } as ActivityType;
-
       const newActivity = {
         datetime: '2012-12-12T20:22:20',
         status: 'Planned',
-        typeId: 'type-id'
+        type: 'Run'
       };
 
       // Act
-      await activityService.create(newActivity, mockUser, type);
+      await activityService.create(newActivity, mockUser);
 
       // Assert
       expect(activityRepository.create).toHaveBeenCalledWith({
         ...newActivity,
-        user: mockUser,
-        type
+        user: mockUser
       });
     });
   });
@@ -84,7 +76,7 @@ describe('ActivityService', () => {
         id: 'activity-id',
         datetime: '2012-12-12T20:22:20',
         status: 'Completed',
-        typeId: 'type-id'
+        type: 'Run'
       } as unknown as Activity;
 
       // Act
@@ -127,26 +119,6 @@ describe('ActivityService', () => {
     });
   });
 
-  describe('findByType', () => {
-    it('should call activityRepository.createQueryBuilder with correct typeId and userId', async () => {
-      // Act
-      await activityService.findByType('type-id', mockUser.id);
-
-      // Assert
-      const query = activityRepository.createQueryBuilder();
-
-      expect(query.innerJoin).toHaveBeenCalledWith('activity.user', 'user');
-      expect(query.innerJoin).toHaveBeenCalledWith('activity.type', 'type');
-      expect(query.where).toHaveBeenCalledWith('type.id= :typeId', {
-        typeId: 'type-id'
-      });
-      expect(query.andWhere).toHaveBeenCalledWith('user.id= :userId', {
-        userId: 'user-id'
-      });
-      expect(query.getOne).toHaveBeenCalled();
-    });
-  });
-
   describe('list', () => {
     it('should call activityRepository.createQueryBuilder with correct userId', async () => {
       // Act
@@ -156,10 +128,6 @@ describe('ActivityService', () => {
       const query = activityRepository.createQueryBuilder();
 
       expect(query.innerJoin).toHaveBeenCalledWith('activity.user', 'user');
-      expect(query.innerJoinAndSelect).toHaveBeenCalledWith(
-        'activity.type',
-        'type'
-      );
       expect(query.where).toHaveBeenCalledWith('user.id = :userId', {
         userId: 'user-id'
       });
