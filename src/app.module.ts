@@ -1,11 +1,16 @@
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { HealthModule } from './modules/health/health.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModule } from './modules/users/user.module';
 import { ExceptionHandler } from './app.exception';
-import { AuthModule } from './modules/auth/auth.module';
+import {
+  ActivityModule,
+  AuthModule,
+  HealthModule,
+  TeamModule,
+  TypeModule,
+  UserModule
+} from './modules';
 
 @Module({
   imports: [
@@ -25,8 +30,11 @@ import { AuthModule } from './modules/auth/auth.module';
       autoLoadEntities: true,
       synchronize: true
     }),
+    ActivityModule,
     AuthModule,
     HealthModule,
+    TeamModule,
+    TypeModule,
     UserModule
   ]
 })

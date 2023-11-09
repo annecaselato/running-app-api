@@ -5,13 +5,10 @@ import { useContainer } from 'class-validator';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.enableCors();
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true
-    })
-  );
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
   await app.listen(8080);
 
   // Allows custom validators to use injected dependencies

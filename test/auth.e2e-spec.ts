@@ -1,10 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { GraphQLModule } from '@nestjs/graphql';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ApolloDriver } from '@nestjs/apollo';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { APP_GUARD } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
 import { useContainer } from 'class-validator';
 import { Repository } from 'typeorm';
 import * as request from 'supertest';
@@ -13,9 +8,9 @@ import * as jwt from 'jsonwebtoken';
 import { User } from '../src/modules/users/user.entity';
 import { UpdatePasswordInput } from '../src/modules/auth/dto';
 import { UserModule } from '../src/modules/users/user.module';
-import { AuthGuard } from '../src/modules/auth/auth.guard';
 import { AuthResolver } from '../src/modules/auth/auth.resolver';
 import { AuthService } from '../src/modules/auth/auth.service';
+import { TestUtils } from './test-utils';
 
 describe('AuthResolver E2E', () => {
   let app: INestApplication;
@@ -61,35 +56,10 @@ describe('AuthResolver E2E', () => {
   beforeAll(async () => {
     process.env.JWT_SECRET = 'jwt-secret';
 
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: ':memory:',
-          entities: [User],
-          logging: true,
-          synchronize: true
-        }),
-        GraphQLModule.forRoot({
-          driver: ApolloDriver,
-          autoSchemaFile: true
-        }),
-        JwtModule.register({
-          global: true,
-          secret: process.env.JWT_SECRET,
-          signOptions: { expiresIn: '500s' }
-        }),
-        UserModule
-      ],
-      providers: [
-        {
-          provide: APP_GUARD,
-          useClass: AuthGuard
-        },
-        AuthResolver,
-        AuthService
-      ]
-    }).compile();
+    const module = await new TestUtils().getModule(
+      [UserModule],
+      [AuthResolver, AuthService]
+    );
 
     app = module.createNestApplication();
     userRepository = module.get<Repository<User>>('UserRepository');
@@ -102,7 +72,7 @@ describe('AuthResolver E2E', () => {
     // Arrange
     const passHash = await bcrypt.hash('Pass123!', 10);
     await userRepository.query(
-      'INSERT INTO "user"("id", "name", "email", "password", "createdAt", "updatedAt") VALUES ("userid", "User", "user@email.com", $1, datetime("now"), datetime("now"))',
+      'INSERT INTO "user"("id", "name", "email", "password") VALUES ("userid", "User", "user@email.com", $1)',
       [passHash]
     );
   });
@@ -302,7 +272,7 @@ describe('AuthResolver E2E', () => {
 
       // Assert
       expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Invalid access token');
+      expect(response.body.errors[0].message).toEqual('Unauthorized access');
     });
 
     it('should return an error if user is not found', async () => {
@@ -315,7 +285,7 @@ describe('AuthResolver E2E', () => {
 
       // Assert
       expect(response.status).toEqual(200);
-      expect(response.body.errors[0].message).toEqual('Invalid access token');
+      expect(response.body.errors[0].message).toEqual('Unauthorized access');
     });
 
     it('should return an error if the old password is incorrect', async () => {
