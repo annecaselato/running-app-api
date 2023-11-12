@@ -50,10 +50,6 @@ export class TeamService {
   }
 
   async listCoachTeams(coachId: string): Promise<Team[]> {
-    return await this.repository
-      .createQueryBuilder('team')
-      .innerJoin('team.coach', 'coach')
-      .where('coach.id= :coachId', { coachId })
-      .getMany();
+    return await this.repository.find({ where: { coach: { id: coachId } } });
   }
 }

@@ -28,6 +28,7 @@ describe('TeamService', () => {
           useValue: {
             save: jest.fn().mockResolvedValue(mockTeam),
             delete: jest.fn().mockResolvedValue({}),
+            find: jest.fn().mockResolvedValue([]),
             createQueryBuilder: jest.fn().mockReturnValue({
               innerJoin: jest.fn().mockReturnThis(),
               innerJoinAndSelect: jest.fn().mockReturnThis(),
@@ -115,11 +116,9 @@ describe('TeamService', () => {
       await teamService.listCoachTeams(mockUser.id);
 
       // Assert
-      const query = teamRepository.createQueryBuilder();
-      expect(query.where).toHaveBeenCalledWith('coach.id= :coachId', {
-        coachId: 'user-id'
+      expect(teamRepository.find).toHaveBeenCalledWith({
+        where: { coach: { id: 'user-id' } }
       });
-      expect(query.getMany).toHaveBeenCalled();
     });
   });
 });
