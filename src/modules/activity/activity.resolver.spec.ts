@@ -43,6 +43,60 @@ describe('ActivityResolver', () => {
     }
   };
 
+  const mockWeekActivities = [
+    [
+      {
+        day: '11/6/2023',
+        activities: [
+          {
+            id: 'activity-1',
+            datetime: new Date('2023-11-06T12:00:00'),
+            status: 'Planned',
+            type: 'Run'
+          }
+        ]
+      },
+      {
+        day: '11/7/2023',
+        activities: [
+          {
+            id: 'activity-2',
+            datetime: new Date('2023-11-07T14:30:00'),
+            status: 'Completed',
+            type: 'Intervals'
+          }
+        ]
+      },
+      {
+        day: '11/8/2023',
+        activities: [
+          {
+            id: 'activity-3',
+            datetime: new Date('2023-11-08T08:45:00'),
+            status: 'Planned',
+            type: 'Walk'
+          }
+        ]
+      },
+      {
+        day: '11/9/2023',
+        activities: []
+      },
+      {
+        day: '11/10/2023',
+        activities: []
+      },
+      {
+        day: '11/11/2023',
+        activities: []
+      },
+      {
+        day: '11/12/2023',
+        activities: []
+      }
+    ]
+  ];
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -54,7 +108,8 @@ describe('ActivityResolver', () => {
             update: jest.fn((input) => input),
             delete: jest.fn(),
             findById: jest.fn(() => mockActivity),
-            list: jest.fn(() => [mockActivity])
+            list: jest.fn(() => [mockActivity]),
+            listWeek: jest.fn(() => mockWeekActivities)
           })
         },
         {
@@ -250,6 +305,16 @@ describe('ActivityResolver', () => {
 
       // Assert
       expect(result).toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  describe('listWeekActivities', () => {
+    it('should return a list of activities', async () => {
+      // Act
+      const result = await activityResolver.listWeekActivities(mockUser);
+
+      // Assert
+      expect(result).toEqual(mockWeekActivities);
     });
   });
 });

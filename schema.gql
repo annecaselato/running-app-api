@@ -65,6 +65,11 @@ type UserActivity {
   user: String!
 }
 
+type WeekActivity {
+  day: String!
+  activities: [Activity!]!
+}
+
 type AthleteTeams {
   invitations: [TeamMember!]!
   teams: [TeamMember!]!
@@ -77,6 +82,7 @@ type SignInResponse {
 
 type Query {
   listActivities(listActivitiesInput: MemberIDInput!): UserActivity!
+  listWeekActivities: [WeekActivity!]!
   getTeam(getTeamInput: IDInput!): Team!
   listCoachTeams: [Team!]!
   listAthleteTeams: AthleteTeams!
