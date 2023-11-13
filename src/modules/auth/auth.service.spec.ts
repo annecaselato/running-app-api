@@ -6,11 +6,13 @@ import { UserService } from '../users/user.service';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { User } from '../users/user.entity';
 import * as jwt from 'jsonwebtoken';
+import { MailerService } from '@nestjs-modules/mailer';
 
 describe('AuthService', () => {
   let authService: AuthService;
   let userService: UserService;
   let jwtService: JwtService;
+  let mailerService: MailerService;
 
   const mockUser = {
     id: 'user-id',
@@ -40,15 +42,25 @@ describe('AuthService', () => {
         {
           provide: JwtService,
           useValue: {
-            signAsync: jest.fn(() => 'access-token')
+            signAsync: jest.fn(() => 'access-token'),
+            verify: jest.fn(() => ({
+              sub: 'user-id'
+            }))
+          }
+        },
+        {
+          provide: MailerService,
+          useValue: {
+            sendMail: jest.fn()
           }
         }
       ]
     }).compile();
 
-    authService = module.get<AuthService>(AuthService);
-    userService = module.get<UserService>(UserService);
-    jwtService = module.get<JwtService>(JwtService);
+    authService = module.get(AuthService);
+    userService = module.get(UserService);
+    jwtService = module.get(JwtService);
+    mailerService = module.get(MailerService);
   });
 
   it('auth service should be defined', () => {
@@ -212,6 +224,52 @@ describe('AuthService', () => {
       await expect(
         authService.updatePassword(mockUserId, mockUpdatePasswordInput)
       ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+  });
+
+  describe('requestRecovery', () => {
+    it('should send recovery email', async () => {
+      // Act
+      await authService.requestRecovery('user@email.com');
+
+      // Assert
+      expect(mailerService.sendMail).toHaveBeenCalled();
+    });
+  });
+
+  describe('passwordRecovery', () => {
+    it('should update password', async () => {
+      // Act
+      await authService.passwordRecovery('token', 'new-pass');
+
+      // Assert
+      expect(userService.updatePassword).toHaveBeenCalled();
+    });
+
+    it('should throw if token is invalid', async () => {
+      // Arrange
+      jest.spyOn(jwtService, 'verify').mockImplementation(() => {
+        throw new Error('invalid');
+      });
+
+      // Act
+      const response = authService.passwordRecovery('token', 'new-pass');
+
+      // Assert
+      await expect(response).rejects.toBeInstanceOf(BadRequestException);
+      expect(userService.updatePassword).not.toHaveBeenCalled();
+    });
+
+    it('should throw if user is not found', async () => {
+      // Arrange
+      jest.spyOn(userService, 'findOneById').mockResolvedValue(undefined);
+
+      // Act
+      const response = authService.passwordRecovery('token', 'new-pass');
+
+      // Assert
+      await expect(response).rejects.toBeInstanceOf(BadRequestException);
+      expect(userService.updatePassword).not.toHaveBeenCalled();
     });
   });
 });

@@ -3,9 +3,11 @@ import { AuthResolver } from './auth.resolver';
 import { AuthService } from './auth.service';
 import { SignInInput, SignInOIDCInput, SignInResponse } from './dto';
 import { User } from '../users/user.entity';
+import { BadRequestException } from '@nestjs/common';
 
 describe('AuthResolver', () => {
   let authResolver: AuthResolver;
+  let authService: AuthService;
 
   const mockUser = {
     id: 'user-id',
@@ -28,13 +30,16 @@ describe('AuthResolver', () => {
               access_token: 'access-token',
               user: mockUser
             })),
-            updatePassword: jest.fn(() => mockUser)
+            updatePassword: jest.fn(() => mockUser),
+            requestRecovery: jest.fn(),
+            passwordRecovery: jest.fn()
           })
         }
       ]
     }).compile();
 
-    authResolver = module.get<AuthResolver>(AuthResolver);
+    authResolver = module.get(AuthResolver);
+    authService = module.get(AuthService);
   });
 
   describe('signIn', () => {
@@ -84,6 +89,55 @@ describe('AuthResolver', () => {
 
       // Assert
       expect(result).toEqual(mockUser.id);
+    });
+  });
+
+  describe('requestRecovery', () => {
+    it('should call authService.requestRecovery with email', async () => {
+      // Arrange
+      const input = {
+        email: 'user@email.com'
+      };
+
+      // Act
+      const response = await authResolver.requestRecovery(input);
+
+      // Assert
+      expect(authService.requestRecovery).toHaveBeenCalledWith(input.email);
+      expect(response).toEqual(true);
+    });
+  });
+
+  describe('resetPassword', () => {
+    // Arrange
+    const input = {
+      token: 'jwt-token',
+      password: 'new-pass'
+    };
+
+    it('should call authService.passwordRecovery with token and password', async () => {
+      // Act
+      const response = await authResolver.resetPassword(input);
+
+      // Assert
+      expect(authService.passwordRecovery).toHaveBeenCalledWith(
+        input.token,
+        input.password
+      );
+      expect(response).toEqual(true);
+    });
+
+    it('should return exception if authService.passwordRecovery throws', async () => {
+      // Arrange
+      jest.spyOn(authService, 'passwordRecovery').mockImplementation(() => {
+        throw new BadRequestException('Invalid');
+      });
+
+      // Act
+      const response = authResolver.resetPassword(input);
+
+      // Assert
+      await expect(response).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 });
