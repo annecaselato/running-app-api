@@ -29,31 +29,21 @@ export class TypeService {
     id: string,
     userId: string
   ): Promise<ActivityType | undefined> {
-    return await this.typeRepository
-      .createQueryBuilder('type')
-      .innerJoin('type.user', 'user')
-      .where({ id })
-      .andWhere('user.id= :userId', { userId })
-      .getOne();
+    return await this.typeRepository.findOne({
+      where: { id, user: { id: userId } }
+    });
   }
 
   async findByType(
     type: string,
     userId: string
   ): Promise<ActivityType | undefined> {
-    return await this.typeRepository
-      .createQueryBuilder('type')
-      .innerJoin('type.user', 'user')
-      .where({ type })
-      .andWhere('user.id= :userId', { userId })
-      .getOne();
+    return await this.typeRepository.findOne({
+      where: { type, user: { id: userId } }
+    });
   }
 
   async list(userId: string): Promise<ActivityType[]> {
-    return await this.typeRepository
-      .createQueryBuilder('type')
-      .innerJoin('type.user', 'user')
-      .where('user.id = :userId', { userId })
-      .getMany();
+    return await this.typeRepository.find({ where: { user: { id: userId } } });
   }
 }

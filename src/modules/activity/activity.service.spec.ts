@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Activity } from './activity.entity';
 import { User } from '../users/user.entity';
 import { ActivityService } from './activity.service';
+import { DateUtil } from '../../utils/date.util';
 
 describe('ActivityService', () => {
   let activityService: ActivityService;
@@ -15,6 +16,27 @@ describe('ActivityService', () => {
     id: 'user-id'
   } as User;
 
+  const mockActivities = [
+    {
+      id: 'activity-1',
+      datetime: new Date('2023-11-06T12:00:00'),
+      status: 'Planned',
+      type: 'Run'
+    },
+    {
+      id: 'activity-2',
+      datetime: new Date('2023-11-07T14:30:00'),
+      status: 'Completed',
+      type: 'Intervals'
+    },
+    {
+      id: 'activity-3',
+      datetime: new Date('2023-11-08T08:45:00'),
+      status: 'Planned',
+      type: 'Walk'
+    }
+  ];
+
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -25,21 +47,15 @@ describe('ActivityService', () => {
             create: jest.fn().mockResolvedValue({}),
             save: jest.fn().mockResolvedValue({}),
             delete: jest.fn().mockResolvedValue({}),
-            createQueryBuilder: jest.fn().mockReturnValue({
-              innerJoin: jest.fn().mockReturnThis(),
-              innerJoinAndSelect: jest.fn().mockReturnThis(),
-              where: jest.fn().mockReturnThis(),
-              andWhere: jest.fn().mockReturnThis(),
-              getOne: jest.fn().mockResolvedValue({}),
-              getMany: jest.fn().mockResolvedValue([])
-            })
+            findOne: jest.fn().mockResolvedValue({}),
+            find: jest.fn().mockResolvedValue(mockActivities)
           }
         }
       ]
     }).compile();
 
-    activityService = module.get<ActivityService>(ActivityService);
-    activityRepository = module.get<Repository<Activity>>(REPOSITORY_TOKEN);
+    activityService = module.get(ActivityService);
+    activityRepository = module.get(REPOSITORY_TOKEN);
   });
 
   it('activity service should be defined', () => {
@@ -103,35 +119,99 @@ describe('ActivityService', () => {
   });
 
   describe('findById', () => {
-    it('should call activityRepository.createQueryBuilder with correct ID and userId', async () => {
+    it('should call activityRepository.findOne with correct ID and userId', async () => {
       // Act
       await activityService.findById('activity-id', mockUser.id);
 
       // Assert
-      const query = activityRepository.createQueryBuilder();
-
-      expect(query.innerJoin).toHaveBeenCalledWith('activity.user', 'user');
-      expect(query.where).toHaveBeenCalledWith({ id: 'activity-id' });
-      expect(query.andWhere).toHaveBeenCalledWith('user.id= :userId', {
-        userId: 'user-id'
+      expect(activityRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'activity-id', user: { id: mockUser.id } }
       });
-      expect(query.getOne).toHaveBeenCalled();
     });
   });
 
   describe('list', () => {
-    it('should call activityRepository.createQueryBuilder with correct userId', async () => {
+    it('should call activityRepository.find with correct userId', async () => {
       // Act
       await activityService.list(mockUser.id);
 
       // Assert
-      const query = activityRepository.createQueryBuilder();
-
-      expect(query.innerJoin).toHaveBeenCalledWith('activity.user', 'user');
-      expect(query.where).toHaveBeenCalledWith('user.id = :userId', {
-        userId: 'user-id'
+      expect(activityRepository.find).toHaveBeenCalledWith({
+        where: { user: { id: mockUser.id } }
       });
-      expect(query.getMany).toHaveBeenCalled();
+    });
+  });
+
+  describe('listWeek', () => {
+    it('should return grouped list of activities', async () => {
+      // Arrange
+      jest
+        .spyOn(DateUtil, 'getDays')
+        .mockReturnValue([
+          new Date('2023-11-06T00:00:00'),
+          new Date('2023-11-07T00:00:00'),
+          new Date('2023-11-08T00:00:00'),
+          new Date('2023-11-09T00:00:00'),
+          new Date('2023-11-10T00:00:00'),
+          new Date('2023-11-11T00:00:00'),
+          new Date('2023-11-12T00:00:00')
+        ]);
+
+      // Act
+      const result = await activityService.listWeek(mockUser.id);
+
+      // Assert
+      expect(result).toEqual([
+        {
+          day: '11/6/2023',
+          activities: [
+            {
+              id: 'activity-1',
+              datetime: new Date('2023-11-06T12:00:00'),
+              status: 'Planned',
+              type: 'Run'
+            }
+          ]
+        },
+        {
+          day: '11/7/2023',
+          activities: [
+            {
+              id: 'activity-2',
+              datetime: new Date('2023-11-07T14:30:00'),
+              status: 'Completed',
+              type: 'Intervals'
+            }
+          ]
+        },
+        {
+          day: '11/8/2023',
+          activities: [
+            {
+              id: 'activity-3',
+              datetime: new Date('2023-11-08T08:45:00'),
+              status: 'Planned',
+              type: 'Walk'
+            }
+          ]
+        },
+        {
+          day: '11/9/2023',
+          activities: []
+        },
+        {
+          day: '11/10/2023',
+          activities: []
+        },
+        {
+          day: '11/11/2023',
+          activities: []
+        },
+        {
+          day: '11/12/2023',
+          activities: []
+        }
+      ]);
     });
   });
 });

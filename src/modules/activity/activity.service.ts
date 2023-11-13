@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, Repository } from 'typeorm';
+import { Between, DeleteResult, Repository } from 'typeorm';
 import { Activity } from './activity.entity';
 import { User } from '../users/user.entity';
-import { CreateActivityInput } from './dto';
+import { CreateActivityInput, WeekActivity } from './dto';
+import { DateUtil } from '../../utils/date.util';
 
 @Injectable()
 export class ActivityService {
@@ -29,19 +30,47 @@ export class ActivityService {
   }
 
   async findById(id: string, userId: string): Promise<Activity | undefined> {
-    return await this.activityRepository
-      .createQueryBuilder('activity')
-      .innerJoin('activity.user', 'user')
-      .where({ id })
-      .andWhere('user.id= :userId', { userId })
-      .getOne();
+    return await this.activityRepository.findOne({
+      where: { id, user: { id: userId } }
+    });
   }
 
   async list(userId: string): Promise<Activity[]> {
-    return await this.activityRepository
-      .createQueryBuilder('activity')
-      .innerJoin('activity.user', 'user')
-      .where('user.id = :userId', { userId })
-      .getMany();
+    return await this.activityRepository.find({
+      where: { user: { id: userId } }
+    });
+  }
+
+  async listWeek(userId: string): Promise<WeekActivity[]> {
+    const days = DateUtil.getDays(7);
+    const weekActivities = days.map((day) => ({
+      day: day.toLocaleDateString(),
+      activities: []
+    }));
+
+    const list = await this.activityRepository.find({
+      where: { user: { id: userId }, datetime: Between(days[0], days[6]) }
+    });
+
+    list.forEach((activity) => {
+      const activityDay = new Date(
+        activity.datetime.getFullYear(),
+        activity.datetime.getMonth(),
+        activity.datetime.getDate(),
+        0,
+        0,
+        0
+      );
+
+      const day = weekActivities.find(
+        (date) => date.day === activityDay.toLocaleDateString()
+      );
+
+      if (day) {
+        day.activities.push(activity);
+      }
+    });
+
+    return weekActivities;
   }
 }

@@ -1,6 +1,8 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import {
+  RequestRecoveryInput,
+  ResetPasswordInput,
   SignInInput,
   SignInOIDCInput,
   SignInResponse,
@@ -35,5 +37,21 @@ export class AuthResolver {
       updatePasswordInput
     );
     return updatedUser.id;
+  }
+
+  @PublicRoute()
+  @Mutation(() => Boolean)
+  async requestRecovery(
+    @Args('requestRecoveryInput') input: RequestRecoveryInput
+  ) {
+    await this.authService.requestRecovery(input.email);
+    return true;
+  }
+
+  @PublicRoute()
+  @Mutation(() => Boolean)
+  async resetPassword(@Args('resetPasswordInput') input: ResetPasswordInput) {
+    await this.authService.passwordRecovery(input.token, input.password);
+    return true;
   }
 }

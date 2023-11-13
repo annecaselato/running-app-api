@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { ExceptionHandler } from './app.exception';
 import {
   ActivityModule,
@@ -29,6 +31,19 @@ import {
       database: process.env.DB_DATABASE,
       autoLoadEntities: true,
       synchronize: true
+    }),
+    MailerModule.forRoot({
+      transport: process.env.MAILER_TRANSPORT,
+      defaults: {
+        from: process.env.MAILER_FROM
+      },
+      template: {
+        dir: 'src/templates',
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true
+        }
+      }
     }),
     ActivityModule,
     AuthModule,

@@ -65,6 +65,11 @@ type UserActivity {
   user: String!
 }
 
+type WeekActivity {
+  day: String!
+  activities: [Activity!]!
+}
+
 type AthleteTeams {
   invitations: [TeamMember!]!
   teams: [TeamMember!]!
@@ -77,6 +82,7 @@ type SignInResponse {
 
 type Query {
   listActivities(listActivitiesInput: MemberIDInput!): UserActivity!
+  listWeekActivities: [WeekActivity!]!
   getTeam(getTeamInput: IDInput!): Team!
   listCoachTeams: [Team!]!
   listAthleteTeams: AthleteTeams!
@@ -107,6 +113,8 @@ type Mutation {
   signIn(signInInput: SignInInput!): SignInResponse!
   signInOIDC(signInOIDCInput: SignInOIDCInput!): SignInResponse!
   updatePassword(updatePasswordInput: UpdatePasswordInput!): String!
+  requestRecovery(requestRecoveryInput: RequestRecoveryInput!): Boolean!
+  resetPassword(resetPasswordInput: ResetPasswordInput!): Boolean!
   createUser(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
   updateProfile(updateProfileInput: UpdateProfileInput!): User!
@@ -173,6 +181,15 @@ input SignInOIDCInput {
 input UpdatePasswordInput {
   oldPassword: String!
   newPassword: String!
+}
+
+input RequestRecoveryInput {
+  email: String!
+}
+
+input ResetPasswordInput {
+  token: String!
+  password: String!
 }
 
 input CreateUserInput {
