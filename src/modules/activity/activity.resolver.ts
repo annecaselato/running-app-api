@@ -12,6 +12,7 @@ import {
 import { ActivityService } from './activity.service';
 import { TeamMemberService } from '../teams/team-member.service';
 import { AuthUser } from '../../shared/decorators';
+import { WeekActivity } from './dto/week-activity.output';
 
 @Resolver(() => Activity)
 export class ActivityResolver {
@@ -119,5 +120,10 @@ export class ActivityResolver {
     }
 
     return { rows: await this.activityService.list(user.id), user: user.name };
+  }
+
+  @Query(() => [WeekActivity])
+  async listWeekActivities(@AuthUser() authUser: User) {
+    return await this.activityService.listWeek(authUser.id);
   }
 }

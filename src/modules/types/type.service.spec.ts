@@ -25,13 +25,8 @@ describe('TypeService', () => {
             create: jest.fn().mockResolvedValue({}),
             save: jest.fn().mockResolvedValue({}),
             delete: jest.fn().mockResolvedValue({}),
-            createQueryBuilder: jest.fn().mockReturnValue({
-              innerJoin: jest.fn().mockReturnThis(),
-              where: jest.fn().mockReturnThis(),
-              andWhere: jest.fn().mockReturnThis(),
-              getOne: jest.fn().mockResolvedValue({}),
-              getMany: jest.fn().mockResolvedValue([])
-            })
+            findOne: jest.fn().mockResolvedValue({}),
+            find: jest.fn().mockResolvedValue([])
           }
         }
       ]
@@ -104,14 +99,9 @@ describe('TypeService', () => {
       await typeService.findById('type-id', mockUser.id);
 
       // Assert
-      const query = typeRepository.createQueryBuilder();
-
-      expect(query.innerJoin).toHaveBeenCalledWith('type.user', 'user');
-      expect(query.where).toHaveBeenCalledWith({ id: 'type-id' });
-      expect(query.andWhere).toHaveBeenCalledWith('user.id= :userId', {
-        userId: 'user-id'
+      expect(typeRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'type-id', user: { id: 'user-id' } }
       });
-      expect(query.getOne).toHaveBeenCalled();
     });
   });
 
@@ -121,14 +111,9 @@ describe('TypeService', () => {
       await typeService.findByType('Run', mockUser.id);
 
       // Assert
-      const query = typeRepository.createQueryBuilder();
-
-      expect(query.innerJoin).toHaveBeenCalledWith('type.user', 'user');
-      expect(query.where).toHaveBeenCalledWith({ type: 'Run' });
-      expect(query.andWhere).toHaveBeenCalledWith('user.id= :userId', {
-        userId: 'user-id'
+      expect(typeRepository.findOne).toHaveBeenCalledWith({
+        where: { type: 'Run', user: { id: 'user-id' } }
       });
-      expect(query.getOne).toHaveBeenCalled();
     });
   });
 
@@ -138,13 +123,9 @@ describe('TypeService', () => {
       await typeService.list(mockUser.id);
 
       // Assert
-      const query = typeRepository.createQueryBuilder();
-
-      expect(query.innerJoin).toHaveBeenCalledWith('type.user', 'user');
-      expect(query.where).toHaveBeenCalledWith('user.id = :userId', {
-        userId: 'user-id'
+      expect(typeRepository.find).toHaveBeenCalledWith({
+        where: { user: { id: 'user-id' } }
       });
-      expect(query.getMany).toHaveBeenCalled();
     });
   });
 });

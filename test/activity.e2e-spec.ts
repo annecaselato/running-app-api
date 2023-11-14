@@ -382,4 +382,34 @@ describe('ActivityResolver E2E', () => {
       expect(response.body.data).toBeFalsy();
     });
   });
+
+  describe('listWeekActivities', () => {
+    const query = `
+      query {
+        listWeekActivities {
+          day
+          activities {
+            id
+            datetime
+            status
+            type
+            goalDistance
+            distance
+            goalDuration
+            duration
+          }
+        }
+      }
+    `;
+
+    it('should retrieve a list of activities', async () => {
+      // Act
+      const response = await new TestUtils().gqlRequest(app, query, {});
+
+      // Assert
+      expect(response.status).toEqual(200);
+      expect(response.body.errors).toBeFalsy();
+      expect(response.body.data.listWeekActivities.length).toBeGreaterThan(0);
+    });
+  });
 });

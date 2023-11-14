@@ -24,6 +24,9 @@ services:
       JWT_SECRET: v4zq5y44ahqvek48rs5kwfjpueeuo78ppxho5s2opefehg674qqrafoh289dahha
       GOOGLE_JWKS_URI: https://www.googleapis.com/oauth2/v3/certs
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      MAILER_TRANSPORT: ${MAILER_TRANSPORT}
+      MAILER_FROM: ${MAILER_FROM}
+      PASSWORD_RECOVERY_URL: http://localhost:3000/recovery
     networks:
       - running-connect
     depends_on:
