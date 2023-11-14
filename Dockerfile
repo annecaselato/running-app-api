@@ -20,7 +20,7 @@ FROM node:16-alpine AS production
 WORKDIR /app
 
 COPY package*.json ./
-COPY templates/ templates/
+COPY src/templates/ templates/
 
 RUN npm ci --omit=dev
 
