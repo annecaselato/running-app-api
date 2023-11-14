@@ -158,7 +158,7 @@ describe('ActivityService', () => {
         ]);
 
       // Act
-      const result = await activityService.listWeek(mockUser.id);
+      const result = await activityService.listWeek(mockUser.id, new Date());
 
       // Assert
       expect(result).toEqual([

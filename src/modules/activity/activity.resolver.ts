@@ -7,7 +7,8 @@ import {
   DeleteActivityInput,
   MemberIDInput,
   UpdateActivityInput,
-  UserActivity
+  UserActivity,
+  WeekActivityInput
 } from './dto';
 import { ActivityService } from './activity.service';
 import { TeamMemberService } from '../teams/team-member.service';
@@ -123,7 +124,10 @@ export class ActivityResolver {
   }
 
   @Query(() => [WeekActivity])
-  async listWeekActivities(@AuthUser() authUser: User) {
-    return await this.activityService.listWeek(authUser.id);
+  async listWeekActivities(
+    @Args('listWeekActivitiesInput') input: WeekActivityInput,
+    @AuthUser() authUser: User
+  ) {
+    return await this.activityService.listWeek(authUser.id, input.startAt);
   }
 }

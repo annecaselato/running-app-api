@@ -311,7 +311,10 @@ describe('ActivityResolver', () => {
   describe('listWeekActivities', () => {
     it('should return a list of activities', async () => {
       // Act
-      const result = await activityResolver.listWeekActivities(mockUser);
+      const result = await activityResolver.listWeekActivities(
+        { startAt: new Date() },
+        mockUser
+      );
 
       // Assert
       expect(result).toEqual(mockWeekActivities);
