@@ -385,8 +385,8 @@ describe('ActivityResolver E2E', () => {
 
   describe('listWeekActivities', () => {
     const query = `
-      query {
-        listWeekActivities {
+      query ($input: WeekActivityInput!) {
+        listWeekActivities(listWeekActivitiesInput: $input) {
           day
           activities {
             id
@@ -404,7 +404,9 @@ describe('ActivityResolver E2E', () => {
 
     it('should retrieve a list of activities', async () => {
       // Act
-      const response = await new TestUtils().gqlRequest(app, query, {});
+      const response = await new TestUtils().gqlRequest(app, query, {
+        input: { startAt: new Date() }
+      });
 
       // Assert
       expect(response.status).toEqual(200);
