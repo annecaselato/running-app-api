@@ -82,7 +82,7 @@ type SignInResponse {
 
 type Query {
   listActivities(listActivitiesInput: MemberIDInput!): UserActivity!
-  listWeekActivities: [WeekActivity!]!
+  listWeekActivities(listWeekActivitiesInput: WeekActivityInput!): [WeekActivity!]!
   getTeam(getTeamInput: IDInput!): Team!
   listCoachTeams: [Team!]!
   listAthleteTeams: AthleteTeams!
@@ -94,6 +94,10 @@ type Query {
 
 input MemberIDInput {
   memberId: String
+}
+
+input WeekActivityInput {
+  startAt: DateTime!
 }
 
 input IDInput {

@@ -38,7 +38,10 @@ import {
         from: process.env.MAILER_FROM
       },
       template: {
-        dir: 'src/templates',
+        dir:
+          process.env.NODE_ENV === 'development'
+            ? 'src/templates'
+            : '/templates',
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true

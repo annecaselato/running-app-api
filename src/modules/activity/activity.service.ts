@@ -41,8 +41,8 @@ export class ActivityService {
     });
   }
 
-  async listWeek(userId: string): Promise<WeekActivity[]> {
-    const days = DateUtil.getDays(7);
+  async listWeek(userId: string, startAt: Date): Promise<WeekActivity[]> {
+    const days = DateUtil.getDays(startAt, 7);
     const weekActivities = days.map((day) => ({
       day: day.toLocaleDateString(),
       activities: []
