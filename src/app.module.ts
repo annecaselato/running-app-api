@@ -41,7 +41,7 @@ import {
         dir:
           process.env.NODE_ENV === 'development'
             ? 'src/templates'
-            : '/templates',
+            : '/app/templates',
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true
