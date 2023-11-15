@@ -7,9 +7,8 @@ export class DateUtil {
         startAt.getFullYear(),
         startAt.getMonth(),
         startAt.getDate() + i,
-        0,
-        0,
-        0
+        startAt.getHours(),
+        startAt.getMinutes()
       );
       daysArray.push(newDate);
     }

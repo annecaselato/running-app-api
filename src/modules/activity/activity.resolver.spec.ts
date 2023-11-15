@@ -127,7 +127,7 @@ describe('ActivityResolver', () => {
 
   describe('createActivity', () => {
     const input: CreateActivityInput = {
-      datetime: new Date().toISOString(),
+      datetime: new Date(),
       status: 'Planned',
       type: 'Run',
       goalDistance: 5.0,

@@ -69,7 +69,7 @@ describe('ActivityService', () => {
   describe('create', () => {
     it('should call activityRepository.create with correct parameters', async () => {
       const newActivity = {
-        datetime: '2012-12-12T20:22:20',
+        datetime: new Date('2012-12-12T20:22:20'),
         status: 'Planned',
         type: 'Run'
       };
@@ -158,12 +158,15 @@ describe('ActivityService', () => {
         ]);
 
       // Act
-      const result = await activityService.listWeek(mockUser.id, new Date());
+      const result = await activityService.listWeek(
+        mockUser.id,
+        new Date('2023-11-06T00:00:00')
+      );
 
       // Assert
       expect(result).toEqual([
         {
-          day: '11/6/2023',
+          day: new Date('2023-11-06T00:00:00'),
           activities: [
             {
               id: 'activity-1',
@@ -174,7 +177,7 @@ describe('ActivityService', () => {
           ]
         },
         {
-          day: '11/7/2023',
+          day: new Date('2023-11-07T00:00:00'),
           activities: [
             {
               id: 'activity-2',
@@ -185,7 +188,7 @@ describe('ActivityService', () => {
           ]
         },
         {
-          day: '11/8/2023',
+          day: new Date('2023-11-08T00:00:00'),
           activities: [
             {
               id: 'activity-3',
@@ -196,19 +199,19 @@ describe('ActivityService', () => {
           ]
         },
         {
-          day: '11/9/2023',
+          day: new Date('2023-11-09T00:00:00'),
           activities: []
         },
         {
-          day: '11/10/2023',
+          day: new Date('2023-11-10T00:00:00'),
           activities: []
         },
         {
-          day: '11/11/2023',
+          day: new Date('2023-11-11T00:00:00'),
           activities: []
         },
         {
-          day: '11/12/2023',
+          day: new Date('2023-11-12T00:00:00'),
           activities: []
         }
       ]);

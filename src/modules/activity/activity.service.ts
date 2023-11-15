@@ -44,7 +44,7 @@ export class ActivityService {
   async listWeek(userId: string, startAt: Date): Promise<WeekActivity[]> {
     const days = DateUtil.getDays(startAt, 7);
     const weekActivities = days.map((day) => ({
-      day: day.toLocaleDateString(),
+      day: day,
       activities: []
     }));
 
@@ -53,17 +53,18 @@ export class ActivityService {
     });
 
     list.forEach((activity) => {
+      const timezoneOffset = startAt.getHours();
+
       const activityDay = new Date(
         activity.datetime.getFullYear(),
         activity.datetime.getMonth(),
         activity.datetime.getDate(),
-        0,
-        0,
-        0
+        activity.datetime.getHours() - timezoneOffset,
+        activity.datetime.getMinutes()
       );
 
       const day = weekActivities.find(
-        (date) => date.day === activityDay.toLocaleDateString()
+        (date) => date.day.toDateString() === activityDay.toDateString()
       );
 
       if (day) {
