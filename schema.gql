@@ -66,7 +66,7 @@ type UserActivity {
 }
 
 type WeekActivity {
-  day: String!
+  day: DateTime!
   activities: [Activity!]!
 }
 
@@ -130,7 +130,7 @@ type Mutation {
 
 input CreateActivityInput {
   memberId: String
-  datetime: String!
+  datetime: DateTime!
   status: String!
   type: String!
   goalDistance: Float

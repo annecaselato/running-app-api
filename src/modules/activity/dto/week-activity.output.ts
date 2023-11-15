@@ -3,8 +3,8 @@ import { Activity } from '../activity.entity';
 
 @ObjectType()
 export class WeekActivity {
-  @Field(() => String)
-  day: string;
+  @Field(() => Date)
+  day: Date;
 
   @Field(() => [Activity])
   activities: Activity[];

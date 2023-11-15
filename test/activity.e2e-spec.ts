@@ -83,7 +83,7 @@ describe('ActivityResolver E2E', () => {
 
   describe('createActivity', () => {
     const createActivityInput: CreateActivityInput = {
-      datetime: new Date().toISOString(),
+      datetime: new Date(),
       status: 'Planned',
       type: 'Run',
       goalDistance: 5.0,
