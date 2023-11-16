@@ -173,7 +173,7 @@ describe('ActivityResolver', () => {
   describe('updateActivity', () => {
     const input: UpdateActivityInput = {
       id: 'activity-id',
-      datetime: new Date().toISOString(),
+      datetime: new Date(),
       status: 'Completed',
       type: 'Easy run'
     };
