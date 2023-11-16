@@ -90,7 +90,7 @@ describe('ActivityService', () => {
       // Arrange
       const updatedActivity = {
         id: 'activity-id',
-        datetime: '2012-12-12T20:22:20',
+        datetime: new Date('2012-12-12T20:22:20'),
         status: 'Completed',
         type: 'Run'
       } as unknown as Activity;

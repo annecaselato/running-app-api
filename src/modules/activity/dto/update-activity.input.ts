@@ -1,6 +1,6 @@
 import { InputType, Field } from '@nestjs/graphql';
 import {
-  IsDateString,
+  IsDate,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -22,9 +22,9 @@ export class UpdateActivityInput {
   @Field({ nullable: true })
   memberId?: string;
 
-  @IsDateString()
+  @IsDate()
   @Field()
-  datetime: string;
+  datetime: Date;
 
   @IsString()
   @Transform(({ value }) => value.trim())

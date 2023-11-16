@@ -156,7 +156,7 @@ describe('ActivityResolver E2E', () => {
   describe('updateActivity', () => {
     const updateActivityInput = {
       id: '1e2e860e-befa-4407-83dd-84fa1d2b1e12',
-      datetime: new Date().toISOString(),
+      datetime: new Date(),
       status: 'Completed',
       type: 'Walk'
     };
