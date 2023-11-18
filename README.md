@@ -1,8 +1,14 @@
-## Description
-Running app API.
+# Run Quest API
+
+API for Run Quest, an application to schedule and log activities related to running.
 
 ## Installation
 
+Requirements:
+ - Node with npm
+ - Docker with Compose
+
+Install dependencies:
 ```bash
 $ npm install
 ```
@@ -10,17 +16,14 @@ $ npm install
 ## Running the app
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+$ docker-compose up
 ```
 
-## Test
+While running, GraphQL documentation and Playground will be available at:
+
+http://localhost:8080/graphql
+
+## Running Tests
 
 ```bash
 # unit tests
@@ -28,7 +31,4 @@ $ npm run test
 
 # e2e tests
 $ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
 ```
